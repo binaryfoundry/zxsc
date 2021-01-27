@@ -41,8 +41,8 @@ namespace SDLSystem
         display_width = DM.w;
         display_height = DM.h;
 
-        window_width = 256 * 4;
-        window_height = 192 * 4;
+        window_width = 320 * 4;
+        window_height = 256 * 4;
 
         InitWindow();
     }

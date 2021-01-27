@@ -27,13 +27,17 @@ set(SOURCES
     "src/Main.cpp"
     "src/System.cpp"
     "src/Z80.c"
-    "src/Rom.c")
+    "src/Rom.c"
+    "src/Speccy.c"
+    "src/Mem.c")
 
 set(HEADERS
     "src/Main.hpp"
     "src/System.hpp"
     "src/Z80.h"
-    "src/Rom.h")
+    "src/Rom.h"
+    "src/Speccy.h"
+    "src/Mem.h")
 
 SOURCE_GROUP("Source" FILES ${SOURCES})
 SOURCE_GROUP("Source" FILES ${HEADERS})

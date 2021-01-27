@@ -5,41 +5,38 @@
 #include <array>
 
 extern "C" {
-#include "Z80.h"
-#include "Rom.h"
+#include "Speccy.h"
 }
-
-#define DISPLAY_WIDTH 256
-#define DISPLAY_HEIGHT 192
-#define DISPLAY_PIXEL_BYTES sizeof(uint32_t)
-#define SYSTEM_MEMORY_BYTES 49152
-
-#define DISPLAY_BYTES (DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_PIXEL_BYTES)
 
 SDLSystem::System sdl;
 
-SDL_Texture* display;
+SDL_Texture* display_texture;
 std::array<uint32_t, DISPLAY_BYTES> display_pixels;
 
-std::array<uint8_t, SYSTEM_MEMORY_BYTES> system_memory;
+zx_t zx_sys;
+zx_desc_t zx_desc;
 
 void init()
-{
-    system_memory.fill(0);
-
-    memcpy(
-        &system_memory[0],
-        &rom48k[0],
-        16384);
-}
-
-void update()
 {
     display_pixels.fill(
         255 << 16 | 255 << 8);
 
+    zx_desc.pixel_buffer = &display_pixels[0];
+    zx_desc.pixel_buffer_size = DISPLAY_PIXEL_BYTES;
+
+    zx_init(
+        &zx_sys,
+        &zx_desc);
+}
+
+void update()
+{
+    zx_exec(
+        &zx_sys,
+        16667);
+
     SDL_UpdateTexture(
-        display,
+        display_texture,
         NULL,
         &display_pixels[0],
         DISPLAY_WIDTH * DISPLAY_PIXEL_BYTES);
@@ -56,7 +53,7 @@ void update()
 
     SDL_RenderCopy(
         sdl.renderer,
-        display,
+        display_texture,
         NULL,
         NULL);
 
@@ -67,7 +64,7 @@ int main(int argc, char *argv[])
 {
     sdl.Init([=]() { update(); });
 
-    display = SDL_CreateTexture(
+    display_texture = SDL_CreateTexture(
         sdl.renderer,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STATIC,
@@ -78,7 +75,8 @@ int main(int argc, char *argv[])
 
     sdl.Run();
 
-    SDL_DestroyTexture(display);
+    SDL_DestroyTexture(
+        display_texture);
 
     return 0;
 }
