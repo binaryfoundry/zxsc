@@ -26,12 +26,14 @@ enable_language(C)
 set(SOURCES
     "src/Main.cpp"
     "src/System.cpp"
-    "src/Z80.c")
+    "src/Z80.c"
+    "src/Rom.c")
 
 set(HEADERS
     "src/Main.hpp"
     "src/System.hpp"
-    "src/Z80.h")
+    "src/Z80.h"
+    "src/Rom.h")
 
 SOURCE_GROUP("Source" FILES ${SOURCES})
 SOURCE_GROUP("Source" FILES ${HEADERS})

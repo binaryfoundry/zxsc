@@ -6,6 +6,7 @@
 
 extern "C" {
 #include "Z80.h"
+#include "Rom.h"
 }
 
 #define DISPLAY_WIDTH 256
