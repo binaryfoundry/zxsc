@@ -55,6 +55,7 @@
 #include <math.h>
 #include <map>
 #include <memory>
+#include <string>
 
 #if defined (SYSTEM_PLATFORM_DARWIN)
 #include <SDL2/SDL.h>
@@ -102,5 +103,28 @@ namespace SDLSystem
 
         bool mouse_click_up = false;
         bool mouse_click_down = false;
+    };
+
+    class File
+    {
+    private:
+        size_t length;
+
+#if defined (EMSCRIPTEN)
+        FILE* handle;
+#else
+        SDL_RWops* handle;
+#endif
+
+    public:
+        File(std::string path, std::string mode);
+        virtual ~File();
+
+        size_t Read(void* buffer, size_t size, size_t count);
+
+        std::string ReadString(uint16_t count);
+        std::string ReadString();
+
+        size_t Length();
     };
 }
