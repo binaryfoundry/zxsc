@@ -15,7 +15,8 @@ extern "C" {
 
 #define DISPLAY_BYTES (DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_PIXEL_BYTES)
 
-SDLSystem::System sys;
+SDLSystem::System sdl;
+
 SDL_Texture* display;
 std::array<uint32_t, DISPLAY_BYTES> display_pixels;
 
@@ -31,36 +32,36 @@ void update()
         DISPLAY_WIDTH * DISPLAY_PIXEL_BYTES);
 
     SDL_SetRenderDrawColor(
-        sys.renderer,
+        sdl.renderer,
         0,
         0,
         0,
         255);
 
     SDL_RenderClear(
-        sys.renderer);
+        sdl.renderer);
 
     SDL_RenderCopy(
-        sys.renderer,
+        sdl.renderer,
         display,
         NULL,
         NULL);
 
-    sys.FrameUpdate();
+    sdl.FrameUpdate();
 }
 
 int main(int argc, char *argv[])
 {
-    sys.Init([=]() { update(); });
+    sdl.Init([=]() { update(); });
 
     display = SDL_CreateTexture(
-        sys.renderer,
+        sdl.renderer,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STATIC,
         DISPLAY_WIDTH,
         DISPLAY_HEIGHT);
 
-    sys.Run();
+    sdl.Run();
 
     SDL_DestroyTexture(display);
 
