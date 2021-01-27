@@ -3,6 +3,7 @@
 #include "System.hpp"
 
 #include <array>
+#include <vector>
 
 extern "C" {
 #include "speccy/Speccy.h"
@@ -15,6 +16,8 @@ std::array<uint32_t, DISPLAY_BYTES> display_pixels;
 
 zx_t zx_sys;
 zx_desc_t zx_desc;
+
+uint32_t update_count = 0;
 
 void init()
 {
@@ -31,6 +34,14 @@ void init()
 
 void update()
 {
+    if (update_count == 180)
+    {
+        SDLSystem::File file("files\\scr.z80", "rb");
+        std::vector<uint8_t> data(file.Length());
+        file.Read(&data[0], sizeof(uint8_t), file.Length());
+        zx_quickload(&zx_sys, &data[0], file.Length());
+    }
+
     zx_exec(
         &zx_sys,
         16667);
@@ -58,6 +69,8 @@ void update()
         NULL);
 
     sdl.FrameUpdate();
+
+    update_count++;
 }
 
 int main(int argc, char *argv[])

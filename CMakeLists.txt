@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 set(PROJECT_NAME zxs)
-set(PROJECT_files_NAME zxsFiles)
+set(PROJECT_files_NAME zxs-files)
 set(EXTERNAL_DEPS_DIR "lib")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
