@@ -2,6 +2,10 @@
 
 #include "System.hpp"
 
+extern "C" {
+#include "Z80.h"
+}
+
 SDLSystem::System sys;
 
 void update()
