@@ -1,64 +1,11 @@
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define CHIPS_IMPL
 #include "Z80.h"
 #include "Rom.h"
-#include "Mem.h"
+#include "Clock.h"
+#include "Memory.h"
 #include "Keyboard.h"
-
-// clk
-typedef struct
-{
-    int64_t freq_hz;
-    int ticks_to_run;
-    int overrun_ticks;
-} clk_t;
-
-uint32_t clk_us_to_ticks(uint64_t freq_hz, uint32_t micro_seconds);
-void clk_init(clk_t* clk, uint32_t freq_hz);
-uint32_t clk_ticks_to_run(clk_t* clk, uint32_t micro_seconds);
-void clk_ticks_executed(clk_t* clk, uint32_t ticks);
-
-void clk_init(clk_t* clk, uint32_t freq_hz)
-{
-    CHIPS_ASSERT(clk && (freq_hz > 1));
-    memset(clk, 0, sizeof(clk_t));
-    clk->freq_hz = freq_hz;
-}
-
-uint32_t clk_us_to_ticks(uint64_t freq_hz, uint32_t micro_seconds)
-{
-    return (uint32_t)((freq_hz * micro_seconds) / 1000000);
-}
-
-uint32_t clk_ticks_to_run(clk_t* clk, uint32_t micro_seconds)
-{
-    CHIPS_ASSERT(clk && (micro_seconds > 0));
-    int ticks = (int)((clk->freq_hz * micro_seconds) / 1000000);
-    clk->ticks_to_run = ticks - clk->overrun_ticks;
-    if (clk->ticks_to_run < 1)
-    {
-        clk->ticks_to_run = 1;
-    }
-    return clk->ticks_to_run;
-}
-
-void clk_ticks_executed(clk_t* clk, uint32_t ticks_executed)
-{
-    if ((int)ticks_executed > clk->ticks_to_run)
-    {
-        clk->overrun_ticks = (int)ticks_executed - clk->ticks_to_run;
-    }
-    else {
-        clk->overrun_ticks = 0;
-    }
-}
-
-// clk
 
 #define DISPLAY_WIDTH (320)
 #define DISPLAY_HEIGHT (256)
@@ -84,8 +31,6 @@ typedef struct
     int pixel_buffer_size;
     void* user_data;
 } zx_desc_t;
-
-z80_desc_t cpu_desc;
 
 typedef struct
 {
@@ -233,7 +178,6 @@ static void _zx_init_keyboard_matrix(zx_t* sys)
     kbd_register_key(&sys->kbd, 0x0C, 4, 0, 1); // Delete (Shift+0)
     kbd_register_key(&sys->kbd, 0x0D, 6, 0, 0); // Enter
 }
-
 
 static uint64_t _zx_tick(int num_ticks, uint64_t pins, void* user_data)
 {
@@ -387,6 +331,4 @@ static bool _zx_decode_scanline(zx_t* sys)
     }
 
     return false;
-}
-
 }

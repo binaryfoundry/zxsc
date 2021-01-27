@@ -5,7 +5,7 @@
 #include <array>
 
 extern "C" {
-#include "Speccy.h"
+#include "speccy/Speccy.h"
 }
 
 SDLSystem::System sdl;

@@ -25,24 +25,33 @@ enable_language(C)
 
 set(SOURCES
     "src/Main.cpp"
-    "src/System.cpp"
-    "src/Z80.c"
-    "src/Rom.c"
-    "src/Speccy.c"
-    "src/Mem.c"
-    "src/Keyboard.c")
+    "src/System.cpp")
 
 set(HEADERS
     "src/Main.hpp"
-    "src/System.hpp"
-    "src/Z80.h"
-    "src/Rom.h"
-    "src/Speccy.h"
-    "src/Mem.h"
-    "src/Keyboard.h")
+    "src/System.hpp")
+
+set(SOURCES_SPECCY
+    "src/speccy/Z80.c"
+    "src/speccy/Rom.c"
+    "src/speccy/Speccy.c"
+    "src/speccy/Clock.c"
+    "src/speccy/Memory.c"
+    "src/speccy/Keyboard.c")
+
+set(HEADERS_SPECCY
+    "src/speccy/Z80.h"
+    "src/speccy/Rom.h"
+    "src/speccy/Speccy.h"
+    "src/speccy/Clock.h"
+    "src/speccy/Memory.h"
+    "src/speccy/Keyboard.h")
 
 SOURCE_GROUP("Source" FILES ${SOURCES})
 SOURCE_GROUP("Source" FILES ${HEADERS})
+
+SOURCE_GROUP("Source\\speccy" FILES ${SOURCES_SPECCY})
+SOURCE_GROUP("Source\\speccy" FILES ${HEADERS_SPECCY})
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/src)
@@ -97,7 +106,9 @@ add_executable(
     ${PROJECT_NAME}
     MACOSX_BUNDLE
     ${SOURCES}
-    ${HEADERS})
+    ${HEADERS}
+    ${SOURCES_SPECCY}
+    ${HEADERS_SPECCY})
 
 target_link_libraries(
     ${PROJECT_NAME}
