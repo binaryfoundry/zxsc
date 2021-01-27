@@ -63,7 +63,6 @@ void clk_ticks_executed(clk_t* clk, uint32_t ticks_executed)
 #define DISPLAY_WIDTH (320)
 #define DISPLAY_HEIGHT (256)
 #define DISPLAY_PIXEL_BYTES sizeof(uint32_t)
-//#define SYSTEM_MEMORY_BYTES 49152
 
 #define DISPLAY_BYTES (DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_PIXEL_BYTES)
 
@@ -92,13 +91,11 @@ typedef struct
 {
     z80_t cpu;
     bool valid;
-    bool memory_paging_disabled;
-    uint8_t kbd_joymask;        /* joystick mask from keyboard joystick emulation */
-    uint8_t joy_joymask;        /* joystick mask from zx_joystick() */
-    uint32_t tick_count;
-    uint8_t last_mem_config;        /* last out to 0x7FFD */
-    uint8_t last_fe_out;            /* last out value to 0xFE port */
-    uint8_t blink_counter;          /* incremented on each vblank */
+    uint8_t kbd_joymask;
+    uint8_t joy_joymask;
+    uint8_t last_mem_config;
+    uint8_t last_fe_out;
+    uint8_t blink_counter;
     int frame_scan_lines;
     int top_border_scanlines;
     int scanline_period;
@@ -111,12 +108,7 @@ typedef struct
     mem_t mem;
     uint32_t* pixel_buffer;
     void* user_data;
-    //zx_audio_callback_t audio_cb;
-    int num_samples;
-    int sample_pos;
-    //float sample_buffer[ZX_MAX_AUDIO_SAMPLES];
     uint8_t ram[8][0x4000];
-    uint8_t junk[0x4000];
 } zx_t;
 
 void zx_init(zx_t* sys, const zx_desc_t* desc);
@@ -181,13 +173,9 @@ static void _zx_init_memory_map(zx_t* sys)
 
 static void _zx_init_keyboard_matrix(zx_t* sys)
 {
-    // setup keyboard matrix
     kbd_init(&sys->kbd, 1);
-    // caps-shift is column 0, line 0
     kbd_register_modifier(&sys->kbd, 0, 0, 0);
-    // sym-shift is column 7, line 1
     kbd_register_modifier(&sys->kbd, 1, 7, 1);
-    // alpha-numeric keys
     const char* keymap =
         // no shift
         " zxcv"         // A8       shift,z,x,c,v
@@ -263,41 +251,9 @@ static uint64_t _zx_tick(int num_ticks, uint64_t pins, void* user_data)
         }
     }
 
-    // tick audio systems
-    for (int i = 0; i < num_ticks; i++)
-    {
-        sys->tick_count++;
-        /*bool sample_ready = beeper_tick(&sys->beeper);
-        // the AY-3-8912 chip runs at half CPU frequency
-        if (sys->type == ZX_TYPE_128)
-        {
-            if (sys->tick_count & 1)
-            {
-                ay38910_tick(&sys->ay);
-            }
-        }
-        if (sample_ready)
-        {
-            float sample = sys->beeper.sample;
-            if (sys->type == ZX_TYPE_128) {
-                sample += sys->ay.sample;
-            }
-            sys->sample_buffer[sys->sample_pos++] = sample;
-            if (sys->sample_pos == sys->num_samples) {
-                if (sys->audio_cb) {
-                    sys->audio_cb(sys->sample_buffer, sys->num_samples, sys->user_data);
-                }
-                sys->sample_pos = 0;
-            }
-        }*/
-    }
-
     // memory and IO requests
     if (pins & Z80_MREQ)
     {
-        // a memory request machine cycle
-        //  FIXME: 'contended memory' accesses should inject wait states
-        //
         const uint16_t addr = Z80_GET_ADDR(pins);
         if (pins & Z80_RD)
         {
@@ -310,18 +266,9 @@ static uint64_t _zx_tick(int num_ticks, uint64_t pins, void* user_data)
     }
     else if (pins & Z80_IORQ)
     {
-        // an IO request machine cycle
-        //  see http://problemkaputt.de/zxdocs.htm#zxspectrum for address decoding
-        //
         if (pins & Z80_RD)
         {
-            // an IO read
-            //  FIXME: reading from port xxFF should return 'current VRAM data'
-            //
             if ((pins & Z80_A0) == 0) {
-                // Spectrum ULA (...............0)
-                //  Bits 5 and 7 as read by INning from Port 0xfe are always one
-                //
                 uint8_t data = (1 << 7) | (1 << 5);
                 // MIC/EAR flags -> bit 6
                 if (sys->last_fe_out & (1 << 3 | 1 << 4))
@@ -339,96 +286,20 @@ static uint64_t _zx_tick(int num_ticks, uint64_t pins, void* user_data)
                 // Kempston Joystick (........000.....)
                 Z80_SET_DATA(pins, sys->kbd_joymask | sys->joy_joymask);
             }
-            /*else if (sys->type == ZX_TYPE_128)
-            {
-                // read from AY-3-8912 (11............0.)
-                if ((pins & (Z80_A15 | Z80_A14 | Z80_A1)) == (Z80_A15 | Z80_A14)) {
-                    pins = ay38910_iorq(&sys->ay, AY38910_BC1 | pins) & Z80_PIN_MASK;
-                }
-            }*/
         }
         else if (pins & Z80_WR)
         {
-            // an IO write
             const uint8_t data = Z80_GET_DATA(pins);
             if ((pins & Z80_A0) == 0)
             {
-                // Spectrum ULA (...............0)
-                //  "every even IO port addresses the ULA but to avoid
-                //  problems with other I/O devices, only FE should be used"
-                //  FIXME:
-                //      bit 3: MIC output (CAS SAVE, 0=On, 1=Off)
-                //
                 sys->border_color = _zx_palette[data & 7] & 0xFFD7D7D7;
                 sys->last_fe_out = data;
-                //beeper_set(&sys->beeper, 0 != (data & (1 << 4)));
             }
-            /*else if (sys->type == ZX_TYPE_128)
-            {
-                // Spectrum 128 memory control (0.............0.)
-                //   http://8bit.yarek.pl/computer/zx.128/
-                //
-                if ((pins & (Z80_A15 | Z80_A1)) == 0)
-                {
-                    if (!sys->memory_paging_disabled)
-                    {
-                        sys->last_mem_config = data;
-                        // bit 3 defines the video scanout memory bank (5 or 7)
-                        sys->display_ram_bank = (data & (1 << 3)) ? 7 : 5;
-                        // only last memory bank is mappable
-                        mem_map_ram(&sys->mem, 0, 0xC000, 0x4000, sys->ram[data & 0x7]);
-
-                        // ROM0 or ROM1
-                        if (data & (1 << 4))
-                        {
-                            // bit 4 set: ROM1
-                            mem_map_rom(&sys->mem, 0, 0x0000, 0x4000, sys->rom[1]);
-                        }
-                        else
-                        {
-                            // bit 4 clear: ROM0
-                            mem_map_rom(&sys->mem, 0, 0x0000, 0x4000, sys->rom[0]);
-                        }
-                    }
-                    if (data & (1 << 5))
-                    {
-                        // bit 5 prevents further changes to memory pages
-                        //  until computer is reset, this is used when switching
-                        //  to the 48k ROM
-                        //
-                        sys->memory_paging_disabled = true;
-                    }
-                }
-                else if ((pins & (Z80_A15 | Z80_A14 | Z80_A1)) == (Z80_A15 | Z80_A14))
-                {
-                    // select AY-3-8912 register (11............0.)
-                    ay38910_iorq(&sys->ay, AY38910_BDIR | AY38910_BC1 | pins);
-                }
-                else if ((pins & (Z80_A15 | Z80_A14 | Z80_A1)) == Z80_A15)
-                {
-                    // write to AY-3-8912 (10............0.)
-                    ay38910_iorq(&sys->ay, AY38910_BDIR | pins);
-                }
-            }*/
         }
     }
     return pins;
 }
 
-/* this is called by the timer callback for every PAL line, controlling
-    the vidmem decoding and vblank interrupt
-    detailed information about frame timings is here:
-    for 48K:    http://rk.nvg.ntnu.no/sinclair/faq/tech_48.html#48K
-    for 128K:   http://rk.nvg.ntnu.no/sinclair/faq/tech_128.html
-    one PAL line takes 224 T-states on 48K, and 228 T-states on 128K
-    one PAL frame is 312 lines on 48K, and 311 lines on 128K
-    decode the next videomem line into the emulator framebuffer,
-    the border area of a real Spectrum is bigger than the emulator
-    (the emu has 32 pixels border on each side, the hardware has:
-    63 or 64 lines top border
-    56 border lines bottom border
-    48 pixels on each side horizontal border
-*/
 static bool _zx_decode_scanline(zx_t* sys)
 {
     const int top_decode_line = sys->top_border_scanlines - 32;
@@ -444,7 +315,7 @@ static bool _zx_decode_scanline(zx_t* sys)
 
         if ((y < 32) || (y >= 224))
         {
-            /* upper/lower border */
+            // upper/lower border
             for (int x = 0; x < DISPLAY_WIDTH; x++)
             {
                 *dst++ = sys->border_color;
