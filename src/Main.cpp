@@ -24,6 +24,16 @@ void init()
     display_pixels.fill(
         255 << 16 | 255 << 8);
 
+    sdl.SetKeyUpCallback([=](uint16_t key)
+    {
+        zx_key_up(&zx_sys, key);
+    });
+
+    sdl.SetKeyDownCallback([=](uint16_t key)
+    {
+        zx_key_down(&zx_sys, key);
+    });
+
     zx_desc.pixel_buffer = &display_pixels[0];
     zx_desc.pixel_buffer_size = DISPLAY_PIXEL_BYTES;
 

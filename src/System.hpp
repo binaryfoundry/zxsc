@@ -83,6 +83,12 @@ namespace SDLSystem
         void SetMouseActive(bool status);
         bool IsKeyDown(uint16_t key);
 
+        void SetKeyUpCallback(std::function<void(uint16_t key)> callback);
+        void SetKeyDownCallback(std::function<void(uint16_t key)> callback);
+
+        std::function<void(uint16_t key)> key_up_callback;
+        std::function<void(uint16_t key)> key_down_callback;
+
         std::function<void()> render_update;
         std::map<uint16_t, bool> key_state;
 

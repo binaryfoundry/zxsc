@@ -67,6 +67,16 @@ namespace SDLSystem
         return false;
     }
 
+    void System::SetKeyUpCallback(std::function<void(uint16_t key)> callback)
+    {
+        key_up_callback = callback;
+    }
+
+    void System::SetKeyDownCallback(std::function<void(uint16_t key)> callback)
+    {
+        key_down_callback = callback;
+    }
+
     void System::InitWindow()
     {
         render_func = render_update;
@@ -350,11 +360,13 @@ namespace SDLSystem
             case SDL_KEYDOWN:
                 key = static_cast<uint16_t>(event.key.keysym.sym);
                 system->key_state[key] = true;
+                system->key_down_callback(key);
                 break;
 
             case SDL_KEYUP:
                 key = static_cast<uint16_t>(event.key.keysym.sym);
                 system->key_state[key] = false;
+                system->key_up_callback(key);
                 if (key == 27)
                 {
                     system->SetMouseActive(false);
