@@ -12,6 +12,7 @@ extern "C" {
 #define DISPLAY_WIDTH 256
 #define DISPLAY_HEIGHT 192
 #define DISPLAY_PIXEL_BYTES sizeof(uint32_t)
+#define SYSTEM_MEMORY_BYTES 49152
 
 #define DISPLAY_BYTES (DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_PIXEL_BYTES)
 
@@ -19,6 +20,18 @@ SDLSystem::System sdl;
 
 SDL_Texture* display;
 std::array<uint32_t, DISPLAY_BYTES> display_pixels;
+
+std::array<uint8_t, SYSTEM_MEMORY_BYTES> system_memory;
+
+void init()
+{
+    system_memory.fill(0);
+
+    memcpy(
+        &system_memory[0],
+        &rom48k[0],
+        16384);
+}
 
 void update()
 {
@@ -60,6 +73,8 @@ int main(int argc, char *argv[])
         SDL_TEXTUREACCESS_STATIC,
         DISPLAY_WIDTH,
         DISPLAY_HEIGHT);
+
+    init();
 
     sdl.Run();
 
