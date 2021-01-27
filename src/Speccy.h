@@ -7,8 +7,8 @@ extern "C" {
 #define CHIPS_IMPL
 #include "Z80.h"
 #include "Rom.h"
-#include "mem.h"
-
+#include "Mem.h"
+#include "Keyboard.h"
 
 // clk
 typedef struct
@@ -107,7 +107,7 @@ typedef struct
     uint32_t display_ram_bank;
     uint32_t border_color;
     clk_t clk;
-    //kbd_t kbd;
+    kbd_t kbd;
     mem_t mem;
     uint32_t* pixel_buffer;
     void* user_data;
@@ -124,6 +124,7 @@ void zx_exec(zx_t* sys, uint32_t micro_seconds);
 static uint64_t _zx_tick(int num, uint64_t pins, void* user_data);
 static bool _zx_decode_scanline(zx_t* sys);
 static void _zx_init_memory_map(zx_t* sys);
+static void _zx_init_keyboard_matrix(zx_t* sys);
 
 #define _ZX_DEFAULT(val,def) (((val) != 0) ? (val) : (def));
 #define _ZX_CLEAR(val) memset(&val, 0, sizeof(val))
@@ -155,6 +156,7 @@ void zx_init(zx_t* sys, const zx_desc_t* desc)
     z80_init(&sys->cpu, &cpu_desc);
 
     _zx_init_memory_map(sys);
+    _zx_init_keyboard_matrix(sys);
 
     z80_set_pc(&sys->cpu, 0x0000);
 }
@@ -165,8 +167,7 @@ void zx_exec(zx_t* sys, uint32_t micro_seconds)
     uint32_t ticks_to_run = clk_ticks_to_run(&sys->clk, micro_seconds);
     uint32_t ticks_executed = z80_exec(&sys->cpu, ticks_to_run);
     clk_ticks_executed(&sys->clk, ticks_executed);
-
-    //kbd_update(&sys->kbd, micro_seconds);
+    kbd_update(&sys->kbd, micro_seconds);
 }
 
 static void _zx_init_memory_map(zx_t* sys)
@@ -177,6 +178,74 @@ static void _zx_init_memory_map(zx_t* sys)
     mem_map_ram(&sys->mem, 0, 0xC000, 0x4000, sys->ram[2]);
     mem_map_rom(&sys->mem, 0, 0x0000, 0x4000, &rom48k[0]);
 }
+
+static void _zx_init_keyboard_matrix(zx_t* sys)
+{
+    // setup keyboard matrix
+    kbd_init(&sys->kbd, 1);
+    // caps-shift is column 0, line 0
+    kbd_register_modifier(&sys->kbd, 0, 0, 0);
+    // sym-shift is column 7, line 1
+    kbd_register_modifier(&sys->kbd, 1, 7, 1);
+    // alpha-numeric keys
+    const char* keymap =
+        // no shift
+        " zxcv"         // A8       shift,z,x,c,v
+        "asdfg"         // A9       a,s,d,f,g
+        "qwert"         // A10      q,w,e,r,t
+        "12345"         // A11      1,2,3,4,5
+        "09876"         // A12      0,9,8,7,6
+        "poiuy"         // A13      p,o,i,u,y
+        " lkjh"         // A14      enter,l,k,j,h
+        "  mnb"         // A15      space,symshift,m,n,b
+
+        // shift
+        " ZXCV"         // A8
+        "ASDFG"         // A9
+        "QWERT"         // A10
+        "     "         // A11
+        "     "         // A12
+        "POIUY"         // A13
+        " LKJH"         // A14
+        "  MNB"         // A15
+
+        // symshift
+        " : ?/"         // A8
+        "     "         // A9
+        "   <>"         // A10
+        "!@#$%"         // A11
+        "_)('&"         // A12
+        "\";   "        // A13
+        " =+-^"         // A14
+        "  .,*";        // A15
+
+    for (int layer = 0; layer < 3; layer++)
+    {
+        for (int column = 0; column < 8; column++)
+        {
+            for (int line = 0; line < 5; line++)
+            {
+                const uint8_t c = keymap[layer * 40 + column * 5 + line];
+                if (c != 0x20)
+                {
+                    kbd_register_key(&sys->kbd, c, column, line, (layer > 0) ? (1 << (layer - 1)) : 0);
+                }
+            }
+        }
+    }
+
+    // special keys
+    kbd_register_key(&sys->kbd, ' ', 7, 0, 0);  // Space
+    kbd_register_key(&sys->kbd, 0x0F, 7, 1, 0); // SymShift
+    kbd_register_key(&sys->kbd, 0x08, 3, 4, 1); // Cursor Left (Shift+5)
+    kbd_register_key(&sys->kbd, 0x0A, 4, 4, 1); // Cursor Down (Shift+6)
+    kbd_register_key(&sys->kbd, 0x0B, 4, 3, 1); // Cursor Up (Shift+7)
+    kbd_register_key(&sys->kbd, 0x09, 4, 2, 1); // Cursor Right (Shift+8)
+    kbd_register_key(&sys->kbd, 0x07, 3, 0, 1); // Edit (Shift+1)
+    kbd_register_key(&sys->kbd, 0x0C, 4, 0, 1); // Delete (Shift+0)
+    kbd_register_key(&sys->kbd, 0x0D, 6, 0, 0); // Enter
+}
+
 
 static uint64_t _zx_tick(int num_ticks, uint64_t pins, void* user_data)
 {
@@ -249,7 +318,7 @@ static uint64_t _zx_tick(int num_ticks, uint64_t pins, void* user_data)
             // an IO read
             //  FIXME: reading from port xxFF should return 'current VRAM data'
             //
-            /*if ((pins & Z80_A0) == 0) {
+            if ((pins & Z80_A0) == 0) {
                 // Spectrum ULA (...............0)
                 //  Bits 5 and 7 as read by INning from Port 0xfe are always one
                 //
@@ -270,7 +339,7 @@ static uint64_t _zx_tick(int num_ticks, uint64_t pins, void* user_data)
                 // Kempston Joystick (........000.....)
                 Z80_SET_DATA(pins, sys->kbd_joymask | sys->joy_joymask);
             }
-            else if (sys->type == ZX_TYPE_128)
+            /*else if (sys->type == ZX_TYPE_128)
             {
                 // read from AY-3-8912 (11............0.)
                 if ((pins & (Z80_A15 | Z80_A14 | Z80_A1)) == (Z80_A15 | Z80_A14)) {

@@ -29,7 +29,8 @@ set(SOURCES
     "src/Z80.c"
     "src/Rom.c"
     "src/Speccy.c"
-    "src/Mem.c")
+    "src/Mem.c"
+    "src/Keyboard.c")
 
 set(HEADERS
     "src/Main.hpp"
@@ -37,7 +38,8 @@ set(HEADERS
     "src/Z80.h"
     "src/Rom.h"
     "src/Speccy.h"
-    "src/Mem.h")
+    "src/Mem.h"
+    "src/Keyboard.h")
 
 SOURCE_GROUP("Source" FILES ${SOURCES})
 SOURCE_GROUP("Source" FILES ${HEADERS})
