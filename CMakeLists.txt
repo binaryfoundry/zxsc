@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.8)
 
 set(PROJECT_NAME zxs)
+set(PROJECT_files_NAME zxsFiles)
 set(EXTERNAL_DEPS_DIR "lib")
-set(RESOURCES_DIR "resources")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src/")
@@ -113,6 +113,15 @@ add_executable(
 target_link_libraries(
     ${PROJECT_NAME}
     ${LIBRARIES})
+
+add_custom_target(
+    ${PROJECT_files_NAME} ALL
+    COMMENT "Copying Files..."
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/files/
+    ${CMAKE_CURRENT_BINARY_DIR}/files)
+
+add_dependencies(${PROJECT_NAME} ${PROJECT_files_NAME})
 
 if (WIN32)
 
