@@ -95,7 +95,6 @@ void zx_init(zx_t* sys, const zx_desc_t* desc)
     sys->valid = true;
     sys->pixel_buffer = (uint32_t*)desc->pixel_buffer;
     sys->user_data = desc->user_data;
-    sys->joystick_type;
     sys->display_ram_bank = 0;
     sys->frame_scan_lines = 312;
     sys->top_border_scanlines = 64;
