@@ -19,6 +19,19 @@ zx_desc_t zx_desc;
 
 uint32_t update_count = 0;
 
+uint16_t remap_stuntcar_keys(uint16_t key)
+{
+    switch (key)
+    {
+        case 80: return 111; break;
+        case 81: return 120; break;
+        case 79: return 112; break;
+        case 82: return 115; break;
+        case 224: return 109; break;
+    }
+    return key;
+}
+
 void init()
 {
     display_pixels.fill(
@@ -26,12 +39,12 @@ void init()
 
     sdl.SetKeyUpCallback([=](uint16_t key)
     {
-        zx_key_up(&zx_sys, key);
+        zx_key_up(&zx_sys, remap_stuntcar_keys(key));
     });
 
     sdl.SetKeyDownCallback([=](uint16_t key)
     {
-        zx_key_down(&zx_sys, key);
+        zx_key_down(&zx_sys, remap_stuntcar_keys(key));
     });
 
     zx_desc.pixel_buffer = &display_pixels[0];
