@@ -593,7 +593,7 @@ bool zx_quickload(zx_t* sys, const uint8_t* ptr, int num_bytes)
             ptr += sizeof(_zx_z80_page_header);
             src_len = (phdr->len_h << 8 | phdr->len_l) & 0xFFFF;
             page_index = phdr->page_nr - 3;
-            if ((page_index == 5))
+            if (page_index == 5)
             {
                 page_index = 0;
             }
