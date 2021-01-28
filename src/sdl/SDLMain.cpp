@@ -8,6 +8,7 @@
 
 #include "SDL.hpp"
 #include "SDLFile.hpp"
+#include "SDLImgui.hpp"
 
 #include <iostream>
 #include <functional>
@@ -21,8 +22,8 @@ static EGLDisplay egl_display;
 static EGLContext egl_context;
 static EGLSurface egl_surface;
 
-static int init_graphics();
-static bool poll_events();
+static int sdl_init_graphics();
+static bool sdl_poll_events();
 
 static int window_width = 320 * 4;
 static int window_height = 256 * 4;
@@ -45,7 +46,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    init_graphics();
+    sdl_imgui_initialise();
+    sdl_init_graphics();
 
     m.Init();
 
@@ -53,7 +55,10 @@ int main(int argc, char *argv[])
 
     while (!done)
     {
-        done = poll_events();
+        done = sdl_poll_events();
+
+        sdl_imgui_update_input(sdl_window);
+        sdl_imgui_update_cursor();
 
         m.Update();
         eglSwapBuffers(egl_display, egl_surface);
@@ -61,6 +66,7 @@ int main(int argc, char *argv[])
 
     m.Deinit();
 
+    sdl_imgui_destroy();
     SDL_GL_DeleteContext(gl);
     SDL_DestroyWindow(sdl_window);
     SDL_Quit();
@@ -68,7 +74,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-static int init_graphics()
+static int sdl_init_graphics()
 {
     sdl_window = SDL_CreateWindow(
         "ZXS",
@@ -209,10 +215,12 @@ failed:
     return 0;
 }
 
-static bool poll_events()
+static bool sdl_poll_events()
 {
     SDL_Event event;
     SDL_PumpEvents();
+
+    ImGuiIO& io = ImGui::GetIO();
 
     uint16_t key = 0;
 
@@ -258,16 +266,56 @@ static bool poll_events()
             break;
 
         case SDL_MOUSEBUTTONDOWN:
+            if (event.button.button == SDL_BUTTON_LEFT)
+            {
+                g_MousePressed[0] = true;
+            }
+            if (event.button.button == SDL_BUTTON_RIGHT)
+            {
+                g_MousePressed[1] = true;
+            }
+            if (event.button.button == SDL_BUTTON_MIDDLE)
+            {
+                g_MousePressed[2] = true;
+            }
+            break;
+
+        case SDL_MOUSEWHEEL:
+            if (event.wheel.x > 0)
+            {
+                io.MouseWheelH += 1;
+            }
+            if (event.wheel.x < 0)
+            {
+                io.MouseWheelH -= 1;
+            }
+            if (event.wheel.y > 0)
+            {
+                io.MouseWheel += 1;
+            }
+            if (event.wheel.y < 0)
+            {
+                io.MouseWheel -= 1;
+            }
+            break;
+
+        case SDL_TEXTINPUT:
+            io.AddInputCharactersUTF8(event.text.text);
             break;
 
         case SDL_KEYDOWN:
-            key = static_cast<uint16_t>(event.key.keysym.sym);
-            sdl_key_down_callback(key);
+            sdl_key_down_callback(static_cast<uint16_t>(event.key.keysym.sym));
             break;
 
         case SDL_KEYUP:
-            key = static_cast<uint16_t>(event.key.keysym.sym);
-            sdl_key_up_callback(key);
+            sdl_key_up_callback(static_cast<uint16_t>(event.key.keysym.sym));
+            int key = event.key.keysym.scancode;
+            IM_ASSERT(key >= 0 && key < IM_ARRAYSIZE(io.KeysDown));
+            io.KeysDown[key] = (event.type == SDL_KEYDOWN);
+            io.KeyShift = ((SDL_GetModState() & KMOD_SHIFT) != 0);
+            io.KeyCtrl = ((SDL_GetModState() & KMOD_CTRL) != 0);
+            io.KeyAlt = ((SDL_GetModState() & KMOD_ALT) != 0);
+            io.KeySuper = false;
             break;
         }
     }

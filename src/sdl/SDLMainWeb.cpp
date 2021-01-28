@@ -8,6 +8,7 @@
 
 #include "SDL.hpp"
 #include "SDLFile.hpp"
+#include "SDLImgui.hpp"
 
 #include <iostream>
 #include <functional>
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    sdl_imgui_initialise();
     sdl_init_graphics();
 
     m.Init();
@@ -59,6 +61,8 @@ int main(int argc, char *argv[])
 
 static void sdl_update()
 {
+    sdl_imgui_update_input(sdl_window);
+    sdl_imgui_update_cursor();
     m.Update();
 }
 

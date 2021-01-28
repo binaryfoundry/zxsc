@@ -24,13 +24,15 @@ set(SOURCES_SDL
     src/sdl/SDL.cpp
     src/sdl/SDLMain.cpp
     src/sdl/SDLMainWeb.cpp
-    src/sdl/SDLFile.cpp)
+    src/sdl/SDLFile.cpp
+    src/sdl/SDLImgui.cpp)
 
 set(HEADERS_SDL
     src/sdl/SDL.hpp
     src/sdl/SDLMain.hpp
     src/sdl/SDLMainWeb.hpp
-    src/sdl/SDLFile.hpp)
+    src/sdl/SDLFile.hpp
+    src/sdl/SDLImgui.hpp)
 
 set(SOURCES_GL
     src/gl/GL.cpp
@@ -58,6 +60,20 @@ set(HEADERS_SPECCY
     "src/speccy/Keyboard.h"
     "src/speccy/Render.hpp")
 
+set(SOURCES_IMGUI
+    lib/imgui/imgui/imgui.cpp
+    lib/imgui/imgui/imgui_draw.cpp
+    lib/imgui/imgui/imgui_demo.cpp
+    lib/imgui/imgui/imgui_widgets.cpp)
+
+set(HEADERS_IMGUI
+    lib/imgui/imgui/imconfig.h
+    lib/imgui/imgui/imgui.h
+    lib/imgui/imgui/imgui_internal.h
+    lib/imgui/imgui/imstb_rectpack.h
+    lib/imgui/imgui/imstb_textedit.h
+    lib/imgui/imgui/imstb_truetype.h)
+
 SOURCE_GROUP("Source" FILES ${SOURCES})
 SOURCE_GROUP("Source" FILES ${HEADERS})
 
@@ -70,9 +86,12 @@ SOURCE_GROUP("Source\\gl" FILES ${HEADERS_GL})
 SOURCE_GROUP("Source\\speccy" FILES ${SOURCES_SPECCY})
 SOURCE_GROUP("Source\\speccy" FILES ${HEADERS_SPECCY})
 
+SOURCE_GROUP("Source\\imgui" FILES ${SOURCES_IMGUI})
+SOURCE_GROUP("Source\\imgui" FILES ${HEADERS_IMGUI})
+
 include_directories(
     ${PROJECT_SOURCE_DIR}/lib/glm
-    ${PROJECT_SOURCE_DIR}/src)
+    ${PROJECT_SOURCE_DIR}/lib/imgui)
 
 if (WIN32)
     message(STATUS "Platform: Windows")
@@ -111,7 +130,9 @@ add_executable(
     ${SOURCES_GL}
     ${HEADERS_GL}
     ${SOURCES_SPECCY}
-    ${HEADERS_SPECCY})
+    ${HEADERS_SPECCY}
+    ${SOURCES_IMGUI}
+    ${HEADERS_IMGUI})
 
 add_custom_target(
     ${PROJECT_files_NAME} ALL
