@@ -3,12 +3,10 @@ cmake_minimum_required(VERSION 3.8)
 set(PROJECT_NAME zxs)
 set(PROJECT_files_NAME zxs-files)
 set(EXTERNAL_DEPS_DIR "lib")
-set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src/")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 set(CMAKE_CXX_STANDARD 11)
 
 option(EMSCRIPTEN "Web Compilation" OFF)
@@ -24,12 +22,22 @@ enable_language(CXX)
 enable_language(C)
 
 set(SOURCES
-    "src/Main.cpp"
-    "src/System.cpp")
+    "src/Main.cpp")
 
 set(HEADERS
-    "src/Main.hpp"
-    "src/System.hpp")
+    "src/Main.hpp")
+
+set(SOURCES_SDL
+    src/sdl/SDL.cpp
+    src/sdl/SDLMain.cpp
+    src/sdl/SDLMainWeb.cpp
+    src/sdl/SDLFile.cpp)
+
+set(HEADERS_SDL
+    src/sdl/SDL.hpp
+    src/sdl/SDLMain.hpp
+    src/sdl/SDLMainWeb.hpp
+    src/sdl/SDLFile.hpp)
 
 set(SOURCES_SPECCY
     "src/speccy/Z80.c"
@@ -49,6 +57,9 @@ set(HEADERS_SPECCY
 
 SOURCE_GROUP("Source" FILES ${SOURCES})
 SOURCE_GROUP("Source" FILES ${HEADERS})
+
+SOURCE_GROUP("Source\\sdl" FILES ${SOURCES_SDL})
+SOURCE_GROUP("Source\\sdl" FILES ${HEADERS_SDL})
 
 SOURCE_GROUP("Source\\speccy" FILES ${SOURCES_SPECCY})
 SOURCE_GROUP("Source\\speccy" FILES ${HEADERS_SPECCY})
@@ -107,6 +118,8 @@ add_executable(
     MACOSX_BUNDLE
     ${SOURCES}
     ${HEADERS}
+    ${SOURCES_SDL}
+    ${HEADERS_SDL}
     ${SOURCES_SPECCY}
     ${HEADERS_SPECCY})
 
@@ -137,6 +150,6 @@ if (EMSCRIPTEN)
     set_target_properties(
         ${PROJECT_NAME}
         PROPERTIES SUFFIX ".html"
-        LINK_FLAGS "--bind -s USE_SDL=2 -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s ASSERTIONS=2 -s --emrun -std=c++11 -O3 --preload-file files --shell-file \"${PROJECT_SOURCE_DIR}/shell.html\" --use-preload-plugins")
+        LINK_FLAGS "--bind -s USE_SDL=2 -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s --emrun -std=c++11 -O3 --preload-file files --shell-file \"${PROJECT_SOURCE_DIR}/shell.html\" --use-preload-plugins")
 
 endif ()
