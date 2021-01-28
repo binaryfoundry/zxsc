@@ -27,7 +27,6 @@ void Main::Init()
 
     sdl_key_down_callback = [=](uint16_t key)
     {
-        printf("%i\n", (uint16_t)key);
         zx_key_down(&zx_sys, remap_stuntcar_keys(key));
     };
 
