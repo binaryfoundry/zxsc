@@ -4,6 +4,8 @@
 
 #include "../Main.hpp"
 
+#include "../gl/GL.hpp"
+
 #include "SDL.hpp"
 #include "SDLFile.hpp"
 
@@ -20,6 +22,9 @@ static bool is_full_screen = false;
 
 static void sdl_run();
 static void sdl_update();
+static int sdl_init_graphics();
+
+Main m;
 
 int main(int argc, char *argv[])
 {
@@ -38,31 +43,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    double cssW, cssH;
-    emscripten_get_element_css_size(0, &cssW, &cssH);
-    element_width = 320 * 2;//static_cast<uint32_t>(cssW);
-    element_height = 240 * 2;//static_cast<uint32_t>(cssH);
+    sdl_init_graphics();
 
-    sdl_window = SDL_CreateWindow(
-        "ZXS",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        element_width,
-        element_height,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
-
-    sdl_renderer = SDL_CreateRenderer(
-        sdl_window,
-        -1,
-        SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-
-    init();
+    m.Init();
 
     sdl_run();
 
-    deinit();
+    m.Deinit();
 
-    SDL_DestroyRenderer(sdl_renderer);
     SDL_DestroyWindow(sdl_window);
     SDL_Quit();
 
@@ -71,8 +59,46 @@ int main(int argc, char *argv[])
 
 static void sdl_update()
 {
-    update();
-    SDL_RenderPresent(sdl_renderer);
+    m.Update();
+}
+
+static int sdl_init_graphics()
+{
+    double cssW, cssH;
+    emscripten_get_element_css_size(0, &cssW, &cssH);
+    element_width = 320 * 4;//static_cast<uint32_t>(cssW);
+    element_height = 240 * 4;//static_cast<uint32_t>(cssH);
+
+    sdl_window = SDL_CreateWindow(
+        "ZXS",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        element_width,
+        element_height,
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+
+    EmscriptenWebGLContextAttributes attr;
+    emscripten_webgl_init_context_attributes(&attr);
+    attr.alpha = 0;
+    attr.depth = 1;
+    attr.stencil = 0;
+    attr.antialias = 1;
+    attr.preserveDrawingBuffer = 0;
+    attr.preferLowPowerToHighPerformance = 0;
+    attr.failIfMajorPerformanceCaveat = 0;
+    attr.enableExtensionsByDefault = 1;
+    attr.premultipliedAlpha = 0;
+    attr.explicitSwapControl = 0;
+    attr.majorVersion = 2;
+    attr.minorVersion = 0;
+
+    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = emscripten_webgl_create_context(
+        0, &attr);
+
+    emscripten_webgl_make_context_current(
+        ctx);
+
+    return 0;
 }
 
 EM_BOOL em_fullscreen_callback(
@@ -161,6 +187,7 @@ EM_BOOL em_key_down_callback(
     const EmscriptenKeyboardEvent *keyEvent,
     void *userData)
 {
+    sdl_key_down_callback((uint16_t)keyEvent->keyCode);
     return false;
 }
 
@@ -169,6 +196,7 @@ EM_BOOL em_key_up_callback(
     const EmscriptenKeyboardEvent *keyEvent,
     void *userData)
 {
+    sdl_key_up_callback((uint16_t)keyEvent->keyCode);
     return false;
 }
 

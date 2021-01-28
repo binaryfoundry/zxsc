@@ -3,34 +3,22 @@
 #include "sdl/SDL.hpp"
 #include "sdl/SDLFile.hpp"
 
-#include <array>
-#include <vector>
-
 extern "C" {
 #include "speccy/Speccy.h"
 }
 
-SDL_Texture* display_texture;
-std::array<uint32_t, DISPLAY_BYTES> display_pixels;
-
 zx_t zx_sys;
 zx_desc_t zx_desc;
 
-uint32_t update_count = 0;
-
 uint16_t remap_stuntcar_keys(uint16_t key);
 
-void init()
+void Main::Init()
 {
-    display_texture = SDL_CreateTexture(
-        sdl_renderer,
-        SDL_PIXELFORMAT_ARGB8888,
-        SDL_TEXTUREACCESS_STATIC,
-        DISPLAY_WIDTH,
-        DISPLAY_HEIGHT);
+    display_pixels.resize(
+        DISPLAY_BYTES);
 
-    display_pixels.fill(
-        255 << 16 | 255 << 8);
+    speccy_render.Init(
+        display_pixels);
 
     sdl_key_up_callback = [=](uint16_t key)
     {
@@ -39,6 +27,7 @@ void init()
 
     sdl_key_down_callback = [=](uint16_t key)
     {
+        printf("%i\n", (uint16_t)key);
         zx_key_down(&zx_sys, remap_stuntcar_keys(key));
     };
 
@@ -50,13 +39,12 @@ void init()
         &zx_desc);
 }
 
-void deinit()
+void Main::Deinit()
 {
-    SDL_DestroyTexture(
-        display_texture);
+    speccy_render.Deinit();
 }
 
-void update()
+void Main::Update()
 {
     if (update_count == 180)
     {
@@ -71,27 +59,7 @@ void update()
         &zx_sys,
         16667);
 
-    SDL_UpdateTexture(
-        display_texture,
-        NULL,
-        &display_pixels[0],
-        DISPLAY_WIDTH * DISPLAY_PIXEL_BYTES);
-
-    SDL_SetRenderDrawColor(
-        sdl_renderer,
-        0,
-        0,
-        0,
-        255);
-
-    SDL_RenderClear(
-        sdl_renderer);
-
-    SDL_RenderCopy(
-        sdl_renderer,
-        display_texture,
-        NULL,
-        NULL);
+    speccy_render.Draw();
 
     update_count++;
 }
@@ -100,11 +68,19 @@ uint16_t remap_stuntcar_keys(uint16_t key)
 {
     switch (key)
     {
+#if !defined(EMSCRIPTEN)
     case 80: return 111; break;
     case 81: return 120; break;
     case 79: return 112; break;
     case 82: return 115; break;
     case 224: return 109; break;
+#else
+    case 37: return 111; break;
+    case 40: return 120; break;
+    case 39: return 112; break;
+    case 38: return 115; break;
+    case 17: return 109; break;
+#endif
     }
     return key;
 }

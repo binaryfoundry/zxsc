@@ -5,8 +5,7 @@ set(PROJECT_files_NAME zxsc-files)
 
 project(${PROJECT_NAME})
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -33,13 +32,22 @@ set(HEADERS_SDL
     src/sdl/SDLMainWeb.hpp
     src/sdl/SDLFile.hpp)
 
+set(SOURCES_GL
+    src/gl/GL.cpp
+    src/gl/Math.cpp)
+
+set(HEADERS_GL
+    src/gl/GL.hpp
+    src/gl/Math.hpp)
+
 set(SOURCES_SPECCY
     "src/speccy/Z80.c"
     "src/speccy/Rom.c"
     "src/speccy/Speccy.c"
     "src/speccy/Clock.c"
     "src/speccy/Memory.c"
-    "src/speccy/Keyboard.c")
+    "src/speccy/Keyboard.c"
+    "src/speccy/Render.cpp")
 
 set(HEADERS_SPECCY
     "src/speccy/Z80.h"
@@ -47,7 +55,8 @@ set(HEADERS_SPECCY
     "src/speccy/Speccy.h"
     "src/speccy/Clock.h"
     "src/speccy/Memory.h"
-    "src/speccy/Keyboard.h")
+    "src/speccy/Keyboard.h"
+    "src/speccy/Render.hpp")
 
 SOURCE_GROUP("Source" FILES ${SOURCES})
 SOURCE_GROUP("Source" FILES ${HEADERS})
@@ -55,42 +64,54 @@ SOURCE_GROUP("Source" FILES ${HEADERS})
 SOURCE_GROUP("Source\\sdl" FILES ${SOURCES_SDL})
 SOURCE_GROUP("Source\\sdl" FILES ${HEADERS_SDL})
 
+SOURCE_GROUP("Source\\gl" FILES ${SOURCES_GL})
+SOURCE_GROUP("Source\\gl" FILES ${HEADERS_GL})
+
 SOURCE_GROUP("Source\\speccy" FILES ${SOURCES_SPECCY})
 SOURCE_GROUP("Source\\speccy" FILES ${HEADERS_SPECCY})
 
 include_directories(
+    ${PROJECT_SOURCE_DIR}/lib/glm
     ${PROJECT_SOURCE_DIR}/src)
 
 if (WIN32)
-
     message(STATUS "Platform: Windows")
     add_compile_options("/EHsc")
-    include_directories(${PROJECT_SOURCE_DIR}/${EXTERNAL_DEPS_DIR}/sdl/win/include)
-    link_directories(${PROJECT_SOURCE_DIR}/${EXTERNAL_DEPS_DIR}/sdl/win/lib/x64)
 
-    set(LIBRARIES
-        SDL2
-        SDL2main)
+    set(SDL2_PATH ${PROJECT_SOURCE_DIR}/lib/sdl/win/sdl2)
+    set(SDL2_LIB_PATH ${SDL2_PATH}/lib/x64)
+
+    set(SDL2_IMAGE_PATH ${PROJECT_SOURCE_DIR}/lib/sdl/win/sdl2-image)
+    set(SDL2_IMAGE_LIB_PATH ${SDL2_IMAGE_PATH}/lib/x64)
+
+    set(PVR_PATH ${PROJECT_SOURCE_DIR}/lib/pvr)
+    set(PVR_LIB_PATH ${PVR_PATH}/Windows/x86_64)
+
+    include_directories(${SDL2_PATH}/include)
+    link_directories(${SDL2_LIB_PATH})
+
+    include_directories(${SDL2_IMAGE_PATH}/include)
+    link_directories(${SDL2_IMAGE_LIB_PATH})
+
+    include_directories(${PVR_PATH}/Include)
+    link_directories(${PVR_LIB_PATH})
 
 elseif (EMSCRIPTEN)
-
     message(STATUS "Platform: HTML5")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -stdlib=libc++")
 
 endif ()
 
 add_executable(
     ${PROJECT_NAME}
-    MACOSX_BUNDLE
     ${SOURCES}
     ${HEADERS}
     ${SOURCES_SDL}
     ${HEADERS_SDL}
+    ${SOURCES_GL}
+    ${HEADERS_GL}
     ${SOURCES_SPECCY}
     ${HEADERS_SPECCY})
-
-target_link_libraries(
-    ${PROJECT_NAME}
-    ${LIBRARIES})
 
 add_custom_target(
     ${PROJECT_files_NAME} ALL
@@ -99,22 +120,55 @@ add_custom_target(
     ${CMAKE_CURRENT_SOURCE_DIR}/files/
     ${CMAKE_CURRENT_BINARY_DIR}/files)
 
-add_dependencies(${PROJECT_NAME} ${PROJECT_files_NAME})
+add_dependencies(
+    ${PROJECT_NAME}
+    ${PROJECT_files_NAME})
 
 if (WIN32)
+   target_include_directories(
+        ${PROJECT_NAME}
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}/include/
+        ${SDL2_PATH}/include
+        ${SDL2_IMAGE_PATH}/include
+        ${PVR_PATH}/include)
 
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    target_link_libraries(
+        ${PROJECT_NAME}
+        PRIVATE
+        SDL2
+        SDL2main
+        SDL2_image
+        libEGL
+        libGLESv2
+        libGLES_CM)
+
+    add_custom_command(
+        TARGET ${PROJECT_NAME}
+        POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${PROJECT_SOURCE_DIR}/lib/sdl/win/lib/x64/dll"
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+        "${SDL2_LIB_PATH}"
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 
-endif ()
+    add_custom_command(
+        TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${SDL2_IMAGE_LIB_PATH}"
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 
-if (EMSCRIPTEN)
+    add_custom_command(
+        TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PVR_LIB_PATH}"
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+
+elseif (EMSCRIPTEN)
 
     set_target_properties(
         ${PROJECT_NAME}
         PROPERTIES SUFFIX ".html"
-        LINK_FLAGS "--bind -s USE_SDL=2 -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s --emrun -std=c++11 -O3 --preload-file files --shell-file \"${PROJECT_SOURCE_DIR}/shell.html\" --use-preload-plugins")
+        LINK_FLAGS "--bind -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s USE_WEBGL2=1 -s WASM=1 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s --emrun -std=c++11 -O3 --preload-file files --shell-file \"${PROJECT_SOURCE_DIR}/shell.html\" --use-preload-plugins")
 
 endif ()
