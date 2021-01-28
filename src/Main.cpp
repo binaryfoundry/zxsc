@@ -51,7 +51,7 @@ void Main::Update()
         File file("files/scr.z80", "rb");
         std::vector<uint8_t> data(file.Length());
         file.Read(&data[0], sizeof(uint8_t), file.Length());
-        zx_quickload(&zx_sys, &data[0], file.Length());
+        zx_quickload(&zx_sys, &data[0], static_cast<int>(file.Length()));
         printf("file loaded\n");
     }
 
