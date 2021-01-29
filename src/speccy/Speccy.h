@@ -13,6 +13,8 @@
 
 #define DISPLAY_BYTES (DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_PIXEL_BYTES)
 
+const int cpu_freq = 3500000;
+
 const static uint32_t _zx_palette[8] =
 {
     0xFF000000,     // black
@@ -24,6 +26,37 @@ const static uint32_t _zx_palette[8] =
     0xFF00FFFF,     // yellow
     0xFFFFFFFF,     // white
 };
+
+static const char* _zx_keymap =
+    // no shift
+    " zxcv"         // A8       shift,z,x,c,v
+    "asdfg"         // A9       a,s,d,f,g
+    "qwert"         // A10      q,w,e,r,t
+    "12345"         // A11      1,2,3,4,5
+    "09876"         // A12      0,9,8,7,6
+    "poiuy"         // A13      p,o,i,u,y
+    " lkjh"         // A14      enter,l,k,j,h
+    "  mnb"         // A15      space,symshift,m,n,b
+
+    // shift
+    " ZXCV"         // A8
+    "ASDFG"         // A9
+    "QWERT"         // A10
+    "     "         // A11
+    "     "         // A12
+    "POIUY"         // A13
+    " LKJH"         // A14
+    "  MNB"         // A15
+
+    // symshift
+    " : ?/"         // A8
+    "     "         // A9
+    "   <>"         // A10
+    "!@#$%"         // A11
+    "_)('&"         // A12
+    "\";   "        // A13
+    " =+-^"         // A14
+    "  .,*";        // A15
 
 typedef struct
 {
@@ -56,11 +89,11 @@ typedef struct
     uint8_t junk[0x4000];
 } zx_t;
 
-void zx_init(zx_t* sys, const zx_desc_t* desc);
-void zx_exec(zx_t* sys, uint32_t micro_seconds);
-bool zx_quickload(zx_t* sys, const uint8_t* ptr, int num_bytes); 
-void zx_key_down(zx_t* sys, int key_code);
-void zx_key_up(zx_t* sys, int key_code);
+static void zx_init(zx_t* sys, const zx_desc_t* desc);
+static void zx_exec(zx_t* sys, uint32_t micro_seconds);
+static bool zx_quickload(zx_t* sys, const uint8_t* ptr, int num_bytes);
+static void zx_key_down(zx_t* sys, int key_code);
+static void zx_key_up(zx_t* sys, int key_code);
 
 static uint64_t _zx_tick(int num, uint64_t pins, void* user_data);
 static bool _zx_decode_scanline(zx_t* sys);
@@ -70,7 +103,7 @@ static void _zx_init_keyboard_matrix(zx_t* sys);
 #define _ZX_DEFAULT(val,def) (((val) != 0) ? (val) : (def));
 #define _ZX_CLEAR(val) memset(&val, 0, sizeof(val))
 
-void zx_init(zx_t* sys, const zx_desc_t* desc)
+static void zx_init(zx_t* sys, const zx_desc_t* desc)
 {
     CHIPS_ASSERT(sys && desc);
     CHIPS_ASSERT(desc->pixel_buffer && (desc->pixel_buffer_size >= DISPLAY_PIXEL_BYTES));
@@ -83,10 +116,8 @@ void zx_init(zx_t* sys, const zx_desc_t* desc)
     sys->frame_scan_lines = 312;
     sys->top_border_scanlines = 64;
     sys->scanline_period = 224;
-
     sys->scanline_counter = sys->scanline_period;
 
-    const int cpu_freq = 3500000;
     clk_init(&sys->clk, cpu_freq);
 
     z80_desc_t cpu_desc;
@@ -101,7 +132,7 @@ void zx_init(zx_t* sys, const zx_desc_t* desc)
     z80_set_pc(&sys->cpu, 0x0000);
 }
 
-void zx_exec(zx_t* sys, uint32_t micro_seconds)
+static void zx_exec(zx_t* sys, uint32_t micro_seconds)
 {
     CHIPS_ASSERT(sys && sys->valid);
     uint32_t ticks_to_run = clk_ticks_to_run(&sys->clk, micro_seconds);
@@ -119,41 +150,23 @@ static void _zx_init_memory_map(zx_t* sys)
     mem_map_rom(&sys->mem, 0, 0x0000, 0x4000, &rom48k[0]);
 }
 
+static void zx_key_down(zx_t* sys, int key_code)
+{
+    CHIPS_ASSERT(sys && sys->valid);
+    kbd_key_down(&sys->kbd, key_code);
+}
+
+static void zx_key_up(zx_t* sys, int key_code)
+{
+    CHIPS_ASSERT(sys && sys->valid);
+    kbd_key_up(&sys->kbd, key_code);
+}
+
 static void _zx_init_keyboard_matrix(zx_t* sys)
 {
     kbd_init(&sys->kbd, 1);
     kbd_register_modifier(&sys->kbd, 0, 0, 0);
     kbd_register_modifier(&sys->kbd, 1, 7, 1);
-    const char* keymap =
-        // no shift
-        " zxcv"         // A8       shift,z,x,c,v
-        "asdfg"         // A9       a,s,d,f,g
-        "qwert"         // A10      q,w,e,r,t
-        "12345"         // A11      1,2,3,4,5
-        "09876"         // A12      0,9,8,7,6
-        "poiuy"         // A13      p,o,i,u,y
-        " lkjh"         // A14      enter,l,k,j,h
-        "  mnb"         // A15      space,symshift,m,n,b
-
-        // shift
-        " ZXCV"         // A8
-        "ASDFG"         // A9
-        "QWERT"         // A10
-        "     "         // A11
-        "     "         // A12
-        "POIUY"         // A13
-        " LKJH"         // A14
-        "  MNB"         // A15
-
-        // symshift
-        " : ?/"         // A8
-        "     "         // A9
-        "   <>"         // A10
-        "!@#$%"         // A11
-        "_)('&"         // A12
-        "\";   "        // A13
-        " =+-^"         // A14
-        "  .,*";        // A15
 
     for (int layer = 0; layer < 3; layer++)
     {
@@ -161,7 +174,7 @@ static void _zx_init_keyboard_matrix(zx_t* sys)
         {
             for (int line = 0; line < 5; line++)
             {
-                const uint8_t c = keymap[layer * 40 + column * 5 + line];
+                const uint8_t c = _zx_keymap[layer * 40 + column * 5 + line];
                 if (c != 0x20)
                 {
                     kbd_register_key(&sys->kbd, c, column, line, (layer > 0) ? (1 << (layer - 1)) : 0);
@@ -336,18 +349,6 @@ static bool _zx_decode_scanline(zx_t* sys)
     return false;
 }
 
-void zx_key_down(zx_t* sys, int key_code)
-{
-    CHIPS_ASSERT(sys && sys->valid);
-    kbd_key_down(&sys->kbd, key_code);
-}
-
-void zx_key_up(zx_t* sys, int key_code)
-{
-    CHIPS_ASSERT(sys && sys->valid);
-    kbd_key_up(&sys->kbd, key_code);
-}
-
 // ZX Z80 file format header (http://www.worldofspectrum.org/faq/reference/z80format.htm )
 typedef struct
 {
@@ -408,7 +409,7 @@ static bool _zx_overflow(const uint8_t* ptr, intptr_t num_bytes, const uint8_t* 
     return (ptr + num_bytes) > end_ptr;
 }
 
-bool zx_quickload(zx_t* sys, const uint8_t* ptr, int num_bytes)
+static bool zx_quickload(zx_t* sys, const uint8_t* ptr, int num_bytes)
 {
     const uint8_t* end_ptr = ptr + num_bytes;
     if (_zx_overflow(ptr, sizeof(_zx_z80_header), end_ptr))
