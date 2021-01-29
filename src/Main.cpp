@@ -20,7 +20,10 @@ void Main::Init()
         DISPLAY_BYTES);
 
     speccy_render.Init(
+        DISPLAY_WIDTH,
+        DISPLAY_HEIGHT,
         display_pixels);
+
     gui.Init();
 
     sdl_key_up_callback = [=](uint16_t key)
@@ -65,8 +68,13 @@ void Main::Update()
         &zx_sys,
         16667);
 
-    speccy_render.Draw();
-    gui.Draw();
+    speccy_render.Draw(
+        sdl_window_width,
+        sdl_window_height);
+
+    gui.Draw(
+        sdl_window_width,
+        sdl_window_height);
 
     update_count++;
 }

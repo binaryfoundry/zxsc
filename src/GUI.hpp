@@ -23,5 +23,7 @@ public:
 
     void Init();
     void Deinit();
-    void Draw();
+    void Draw(
+        const uint32_t window_width,
+        const uint32_t window_height);
 };

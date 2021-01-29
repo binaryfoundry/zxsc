@@ -55,14 +55,19 @@ namespace Speccy
     }
 
     void Render::Init(
+        const uint32_t width,
+        const uint32_t height,
         std::vector<uint32_t>& display_pixels)
     {
+        display_width = width;
+        display_height = height;
+
         display_texture_data = reinterpret_cast<uint8_t*>(
             &display_pixels[0]);
 
         display_texture = OpenGL::GenTextureRGBA8(
-            320,
-            240,
+            display_width,
+            display_height,
             display_texture_data);
 
         gl_shader_program = OpenGL::LinkShader(
@@ -112,19 +117,18 @@ namespace Speccy
             1, &index_buffer);
     }
 
-    void Render::Draw()
+    void Render::Draw(
+        const uint32_t window_width,
+        const uint32_t window_height)
     {
         glDisable(GL_CULL_FACE);
         glCullFace(GL_BACK);
 
-        const uint32_t width = 320 * 4;
-        const uint32_t height = 256 * 4;
-
         glViewport(
             0,
             0,
-            width,
-            height);
+            window_width,
+            window_height);
 
         glClearColor(
             1, 1, 1, 1);
@@ -159,8 +163,8 @@ namespace Speccy
             GL_TEXTURE_2D,
             0,
             gl_internal_format,
-            320,
-            256,
+            display_width,
+            display_height,
             0,
             gl_format,
             gl_type,

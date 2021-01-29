@@ -129,22 +129,21 @@ void GUI::Deinit()
         &g_FontTexture);
 }
 
-void GUI::Draw()
+void GUI::Draw(
+    const uint32_t window_width,
+    const uint32_t window_height)
 {
-    const float width = 320 * 4;
-    const float height = 256 * 4;
-
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2(
-        width,
-        height);
+        window_width,
+        window_height);
 
     ImGui::Render();
 
     const glm::mat4 proj = glm::ortho<float>(
         0,
-        static_cast<float>(width),
-        static_cast<float>(height),
+        static_cast<float>(window_width),
+        static_cast<float>(window_height),
         0,
         -1.0f,
         1.0f);
@@ -253,14 +252,14 @@ void GUI::Draw()
             clip_rect.z = (pcmd->ClipRect.z - clip_off.x) * clip_scale.x;
             clip_rect.w = (pcmd->ClipRect.w - clip_off.y) * clip_scale.y;
 
-            if (clip_rect.x < width &&
-                clip_rect.y < height &&
+            if (clip_rect.x < window_width &&
+                clip_rect.y < window_height &&
                 clip_rect.z >= 0.0f &&
                 clip_rect.w >= 0.0f)
             {
                 glScissor(
                     (int)clip_rect.x,
-                    (int)(height - clip_rect.w),
+                    (int)(window_height - clip_rect.w),
                     (int)(clip_rect.z - clip_rect.x),
                     (int)(clip_rect.w - clip_rect.y));
 

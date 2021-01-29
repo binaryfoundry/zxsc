@@ -61,6 +61,11 @@ int main(int argc, char *argv[])
 
 static void sdl_update()
 {
+    double cssW, cssH;
+    emscripten_get_element_css_size(0, &cssW, &cssH);
+    sdl_window_width = static_cast<int>(cssW);
+    sdl_window_height = static_cast<int>(cssH);
+
     sdl_imgui_update_input(sdl_window);
     sdl_imgui_update_cursor();
     m.Update();
@@ -71,7 +76,7 @@ static int sdl_init_graphics()
     double cssW, cssH;
     emscripten_get_element_css_size(0, &cssW, &cssH);
     element_width = 320 * 4;//static_cast<uint32_t>(cssW);
-    element_height = 240 * 4;//static_cast<uint32_t>(cssH);
+    element_height = 256 * 4;//static_cast<uint32_t>(cssH);
 
     sdl_window = SDL_CreateWindow(
         "ZXS",

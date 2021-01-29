@@ -29,11 +29,19 @@ namespace Speccy
         glm::mat4 proj;
         glm::mat4 view;
 
+        uint32_t display_width;
+        uint32_t display_height;
+
     public:
         Render();
 
-        void Init(std::vector<uint32_t>& display_pixels);
+        void Init(
+            const uint32_t display_width,
+            const uint32_t display_height,
+            std::vector<uint32_t>& display_pixels);
         void Deinit();
-        void Draw();
+        void Draw(
+            const uint32_t window_width,
+            const uint32_t window_height);
     };
 }

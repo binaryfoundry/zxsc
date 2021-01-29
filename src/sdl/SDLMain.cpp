@@ -55,6 +55,11 @@ int main(int argc, char *argv[])
 
     while (!done)
     {
+        SDL_GetWindowSize(
+            sdl_window,
+            &sdl_window_width,
+            &sdl_window_height);
+
         done = sdl_poll_events();
 
         sdl_imgui_update_input(sdl_window);
