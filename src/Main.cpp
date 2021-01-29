@@ -3,6 +3,8 @@
 #include "sdl/SDL.hpp"
 #include "sdl/SDLFile.hpp"
 
+#include "imgui/imgui.h"
+
 extern "C" {
 #include "speccy/Speccy.h"
 }
@@ -19,6 +21,7 @@ void Main::Init()
 
     speccy_render.Init(
         display_pixels);
+    gui.Init();
 
     sdl_key_up_callback = [=](uint16_t key)
     {
@@ -41,10 +44,14 @@ void Main::Init()
 void Main::Deinit()
 {
     speccy_render.Deinit();
+    gui.Deinit();
 }
 
 void Main::Update()
 {
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow();
+
     if (update_count == 180)
     {
         File file("files/scr.z80", "rb");
@@ -59,6 +66,7 @@ void Main::Update()
         16667);
 
     speccy_render.Draw();
+    gui.Draw();
 
     update_count++;
 }

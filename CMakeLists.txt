@@ -15,10 +15,12 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 option(EMSCRIPTEN "Web Compilation" OFF)
 
 set(SOURCES
-    "src/Main.cpp")
+    "src/Main.cpp"
+    "src/GUI.cpp")
 
 set(HEADERS
-    "src/Main.hpp")
+    "src/Main.hpp"
+    "src/GUI.hpp")
 
 set(SOURCES_SDL
     src/sdl/SDL.cpp

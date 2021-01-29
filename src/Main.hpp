@@ -2,17 +2,19 @@
 
 #include <vector>
 
+#include "GUI.hpp"
+
 #include "speccy/Render.hpp"
 
 class Main
 {
 private:
 
-    //SDL_Texture* display_texture;
     std::vector<uint32_t> display_pixels;
 
     uint32_t update_count = 0;
 
+    GUI gui;
     Speccy::Render speccy_render;
 
 public:
