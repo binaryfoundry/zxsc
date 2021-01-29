@@ -50,6 +50,8 @@ namespace Speccy
          0, 1, 2, 2, 3, 0
     };
 
+    const float speccy_aspect = 1.25f;
+
     Render::Render()
     {
     }
@@ -131,22 +133,43 @@ namespace Speccy
             window_height);
 
         glClearColor(
-            1, 1, 1, 1);
+            0, 0, 0, 1);
 
         glClear(
             GL_COLOR_BUFFER_BIT |
             GL_DEPTH_BUFFER_BIT |
             GL_STENCIL_BUFFER_BIT);
 
+        const float window_aspect =
+            static_cast<float>(window_width) /
+            window_height;
+
+        const float aspect = window_aspect / speccy_aspect;
+
+        const glm::vec3 scale = glm::vec3(
+            window_width / aspect,
+            window_height,
+            1);
+
+        const float hpos = std::round((window_width / 2) - (scale.x / 2));
+
         proj = glm::ortho<float>(
             0,
-            static_cast<float>(1),
-            static_cast<float>(1),
+            static_cast<float>(window_width),
+            static_cast<float>(window_height),
             0,
             -1.0f,
             1.0f);
 
         view = glm::mat4();
+
+        view = glm::translate(
+            view,
+            glm::vec3(hpos, 0.0f, 0.0f));
+
+        view = glm::scale(
+            view,
+            scale);
 
         glActiveTexture(
             GL_TEXTURE0);
