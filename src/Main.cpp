@@ -70,7 +70,8 @@ void Main::Update()
 
     speccy_render.Draw(
         sdl_window_width,
-        sdl_window_height);
+        sdl_window_height,
+        zx_sys.border_color);
 
     gui.Draw(
         sdl_window_width,

@@ -121,7 +121,8 @@ namespace Speccy
 
     void Render::Draw(
         const uint32_t window_width,
-        const uint32_t window_height)
+        const uint32_t window_height,
+        const uint32_t border_color)
     {
         glDisable(GL_CULL_FACE);
         glCullFace(GL_BACK);
@@ -132,8 +133,20 @@ namespace Speccy
             window_width,
             window_height);
 
+        float border_r = static_cast<float>(
+            (border_color & 0x000000ff) >> 0);
+
+        float border_g = static_cast<float>(
+            (border_color & 0x0000ff00) >> 8);
+
+        float border_b = static_cast<float>(
+            (border_color & 0x00ff0000) >> 16);
+
         glClearColor(
-            0, 0, 0, 1);
+            border_r / 255.0f,
+            border_g / 255.0f,
+            border_b / 255.0f,
+            1);
 
         glClear(
             GL_COLOR_BUFFER_BIT |
