@@ -28,7 +28,7 @@ static bool sdl_poll_events();
 static int window_width = 320 * 4;
 static int window_height = 256 * 4;
 
-Main m;
+static Main m;
 
 int main(int argc, char *argv[])
 {
@@ -88,13 +88,13 @@ static int sdl_init_graphics()
     SDL_VERSION(
         &info.version);
 
-    SDL_bool get_win_info = SDL_GetWindowWMInfo(
+    const SDL_bool get_win_info = SDL_GetWindowWMInfo(
         sdl_window,
         &info);
     SDL_assert_release(
         get_win_info);
 
-    EGLNativeWindowType hWnd = reinterpret_cast<EGLNativeWindowType>(
+    const EGLNativeWindowType hWnd = reinterpret_cast<EGLNativeWindowType>(
         info.info.win.window);
 
     EGLint err;
@@ -106,7 +106,7 @@ static int sdl_init_graphics()
     EGLSurface surface;
     EGLConfig config;
 
-    EGLint config_attribs[] =
+    const EGLint config_attribs[] =
     {
         EGL_RED_SIZE,       8,
         EGL_GREEN_SIZE,     8,
@@ -121,14 +121,14 @@ static int sdl_init_graphics()
         EGL_NONE
     };
 
-    EGLint context_attribs[] =
+    const EGLint context_attribs[] =
     {
         EGL_CONTEXT_MAJOR_VERSION_KHR, 2,
         EGL_CONTEXT_MINOR_VERSION_KHR, 0,
         EGL_NONE
     };
 
-    EGLint surface_attribs[] =
+    const EGLint surface_attribs[] =
     {
         //EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
         //EGL_GL_COLORSPACE_KHR, EGL_GL_COLORSPACE_SRGB_KHR,
@@ -197,7 +197,7 @@ failed:
     egl_surface = surface;
     egl_context = context;
 
-    auto r = eglSwapInterval(egl_display, 1);
+    const auto swap_interval = eglSwapInterval(egl_display, 1);
 
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 

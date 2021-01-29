@@ -13,7 +13,7 @@
 
 #define DISPLAY_BYTES (DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_PIXEL_BYTES)
 
-static uint32_t _zx_palette[8] =
+const static uint32_t _zx_palette[8] =
 {
     0xFF000000,     // black
     0xFFFF0000,     // blue

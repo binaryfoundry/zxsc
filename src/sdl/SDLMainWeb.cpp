@@ -107,8 +107,8 @@ static int sdl_init_graphics()
 
 EM_BOOL em_fullscreen_callback(
     int eventType,
-    const EmscriptenFullscreenChangeEvent *fullscreenChangeEvent,
-    void *userData)
+    const EmscriptenFullscreenChangeEvent* fullscreenChangeEvent,
+    void* userData)
 {
     is_full_screen = fullscreenChangeEvent->isFullscreen;
     if (is_full_screen)
@@ -126,16 +126,16 @@ EM_BOOL em_fullscreen_callback(
 
 EM_BOOL em_pointerlock_callback(
     int eventType,
-    const EmscriptenPointerlockChangeEvent *pointerEvent,
-    void *userData)
+    const EmscriptenPointerlockChangeEvent* pointerEvent,
+    void* userData)
 {
     return false;
 }
 
 EM_BOOL em_mouse_click_callback(
     int eventType,
-    const EmscriptenMouseEvent *mouseEvent,
-    void *userData)
+    const EmscriptenMouseEvent* mouseEvent,
+    void* userData)
 {
     return false;
 }
@@ -143,12 +143,15 @@ EM_BOOL em_mouse_click_callback(
 EM_BOOL em_mouse_move_callback(
     int eventType,
     const EmscriptenMouseEvent *mouseEvent,
-    void *userData)
+    void* userData)
 {
     return false;
 }
 
-EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData)
+EM_BOOL on_canvassize_changed(
+    int eventType,
+    const void* reserved,
+    void* userData)
 {
     int w, h, fs;
     double cssW, cssH;
@@ -188,7 +191,7 @@ extern "C"
 
 EM_BOOL em_key_down_callback(
     int eventType,
-    const EmscriptenKeyboardEvent *keyEvent,
+    const EmscriptenKeyboardEvent* keyEvent,
     void *userData)
 {
     sdl_key_down_callback((uint16_t)keyEvent->keyCode);
@@ -197,7 +200,7 @@ EM_BOOL em_key_down_callback(
 
 EM_BOOL em_key_up_callback(
     int eventType,
-    const EmscriptenKeyboardEvent *keyEvent,
+    const EmscriptenKeyboardEvent* keyEvent,
     void *userData)
 {
     sdl_key_up_callback((uint16_t)keyEvent->keyCode);
@@ -206,7 +209,7 @@ EM_BOOL em_key_up_callback(
 
 EM_BOOL em_resize_callback(
     int eventType,
-    const EmscriptenUiEvent *e,
+    const EmscriptenUiEvent* e,
     void *userData)
 {
     double cssW, cssH;
@@ -216,31 +219,68 @@ EM_BOOL em_resize_callback(
     return 0;
 }
 
-//static EM_BOOL em_handle_key_press(
-//    int eventType,
-//    const EmscriptenKeyboardEvent *keyEvent,
-//    void *userData)
-//{
-//    char text[5];
-//    if (Emscripten_ConvertUTF32toUTF8(keyEvent->charCode, text)) {
-//        ImGuiIO& io = ImGui::GetIO();
-//        io.AddInputCharactersUTF8(text);
-//    }
-//    return SDL_GetEventState(SDL_TEXTINPUT) == SDL_ENABLE;
-//}
-//
-//static EM_BOOL em_wheel_callback(
-//    int eventType,
-//    const EmscriptenWheelEvent *wheelEvent,
-//    void *userData)
-//{
-//    ImGuiIO& io = ImGui::GetIO();
-//    if (wheelEvent->deltaX > 0) io.MouseWheelH -= 1;
-//    if (wheelEvent->deltaX < 0) io.MouseWheelH += 1;
-//    if (wheelEvent->deltaY > 0) io.MouseWheel -= 1;
-//    if (wheelEvent->deltaY < 0) io.MouseWheel += 1;
-//    return SDL_TRUE;
-//}
+static int Emscripten_ConvertUTF32toUTF8(
+    Uint32 codepoint,
+    char* text)
+{
+    if (codepoint <= 0x7F)
+    {
+        text[0] = (char)codepoint;
+        text[1] = '\0';
+    }
+    else if (codepoint <= 0x7FF)
+    {
+        text[0] = 0xC0 | (char)((codepoint >> 6) & 0x1F);
+        text[1] = 0x80 | (char)(codepoint & 0x3F);
+        text[2] = '\0';
+    }
+    else if (codepoint <= 0xFFFF)
+    {
+        text[0] = 0xE0 | (char)((codepoint >> 12) & 0x0F);
+        text[1] = 0x80 | (char)((codepoint >> 6) & 0x3F);
+        text[2] = 0x80 | (char)(codepoint & 0x3F);
+        text[3] = '\0';
+    }
+    else if (codepoint <= 0x10FFFF)
+    {
+        text[0] = 0xF0 | (char)((codepoint >> 18) & 0x0F);
+        text[1] = 0x80 | (char)((codepoint >> 12) & 0x3F);
+        text[2] = 0x80 | (char)((codepoint >> 6) & 0x3F);
+        text[3] = 0x80 | (char)(codepoint & 0x3F);
+        text[4] = '\0';
+    }
+    else
+    {
+        return SDL_FALSE;
+    }
+    return SDL_TRUE;
+}
+
+static EM_BOOL em_handle_key_press(
+    int eventType,
+    const EmscriptenKeyboardEvent *keyEvent,
+    void *userData)
+{
+    char text[5];
+    if (Emscripten_ConvertUTF32toUTF8(keyEvent->charCode, text)) {
+        ImGuiIO& io = ImGui::GetIO();
+        io.AddInputCharactersUTF8(text);
+    }
+    return SDL_GetEventState(SDL_TEXTINPUT) == SDL_ENABLE;
+}
+
+static EM_BOOL em_wheel_callback(
+    int eventType,
+    const EmscriptenWheelEvent *wheelEvent,
+    void *userData)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    if (wheelEvent->deltaX > 0) io.MouseWheelH -= 1;
+    if (wheelEvent->deltaX < 0) io.MouseWheelH += 1;
+    if (wheelEvent->deltaY > 0) io.MouseWheel -= 1;
+    if (wheelEvent->deltaY < 0) io.MouseWheel += 1;
+    return SDL_TRUE;
+}
 
 static void sdl_run()
 {
@@ -258,10 +298,10 @@ static void sdl_run()
         NULL, NULL, true, em_key_up_callback);
     emscripten_set_resize_callback(
         NULL, NULL, true, em_resize_callback);
-    //emscripten_set_keypress_callback(
-    //    NULL, NULL, true, em_handle_key_press);
-    //emscripten_set_wheel_callback(
-    //    NULL, NULL, true, em_wheel_callback);
+    emscripten_set_keypress_callback(
+        NULL, NULL, true, em_handle_key_press);
+    emscripten_set_wheel_callback(
+        NULL, NULL, true, em_wheel_callback);
     emscripten_set_element_css_size(
         NULL, element_width, element_height);
     emscripten_set_main_loop(

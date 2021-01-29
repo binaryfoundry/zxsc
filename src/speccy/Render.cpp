@@ -2,7 +2,7 @@
 
 namespace Speccy
 {
-    static std::string vertex_shader_string =
+    static const std::string vertex_shader_string =
         R"(#version 100
         #ifdef GL_ES
         precision mediump float;
@@ -18,7 +18,7 @@ namespace Speccy
             gl_Position = projection * view * vec4(position, 1.0);
         })";
 
-    static std::string fragment_shader_string =
+    static const std::string fragment_shader_string =
         R"(#version 100
         #ifdef GL_ES
         precision mediump float;
@@ -151,9 +151,9 @@ namespace Speccy
             GL_TEXTURE_2D,
             display_texture);
 
-        GLuint gl_internal_format = GL_RGBA;
-        GLuint gl_format = GL_RGBA;
-        GLuint gl_type = GL_UNSIGNED_BYTE;
+        const GLuint gl_internal_format = GL_RGBA;
+        const GLuint gl_format = GL_RGBA;
+        const GLuint gl_type = GL_UNSIGNED_BYTE;
 
         glTexImage2D(
             GL_TEXTURE_2D,
