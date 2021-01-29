@@ -145,13 +145,17 @@ namespace Speccy
             window_height;
 
         const float aspect = window_aspect / speccy_aspect;
+        const bool wide = window_width / speccy_aspect > window_height;
 
-        const glm::vec3 scale = glm::vec3(
-            window_width / aspect,
-            window_height,
-            1);
+        const glm::vec3 scale = wide ?
+            glm::vec3(window_width / aspect, window_height, 1) :
+            glm::vec3(window_width, window_height * aspect, 1);
 
-        const float hpos = std::round((window_width / 2) - (scale.x / 2));
+        const float hpos = wide ?
+            std::round((window_width / 2) - (scale.x / 2)) : 0;
+
+        const float vpos = wide ?
+            0 : std::round((window_height / 2) - (scale.y / 2));
 
         proj = glm::ortho<float>(
             0,
@@ -165,7 +169,7 @@ namespace Speccy
 
         view = glm::translate(
             view,
-            glm::vec3(hpos, 0.0f, 0.0f));
+            glm::vec3(hpos, vpos, 0.0f));
 
         view = glm::scale(
             view,
