@@ -75,8 +75,8 @@ static int sdl_init_graphics()
 {
     double cssW, cssH;
     emscripten_get_element_css_size(0, &cssW, &cssH);
-    element_width = 320 * 4;//static_cast<uint32_t>(cssW);
-    element_height = 256 * 4;//static_cast<uint32_t>(cssH);
+    element_width = static_cast<uint32_t>(cssW);
+    element_height = static_cast<uint32_t>(cssH);
 
     sdl_window = SDL_CreateWindow(
         "ZXS",
