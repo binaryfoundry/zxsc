@@ -161,8 +161,8 @@ namespace Speccy
         const bool wide = window_width / speccy_aspect > window_height;
 
         const glm::vec3 scale = wide ?
-            glm::vec3(window_width / aspect, window_height, 1) :
-            glm::vec3(window_width, window_height * aspect, 1);
+            glm::vec3(std::floor(window_width / aspect), window_height, 1) :
+            glm::vec3(window_width, std::floor(window_height * aspect), 1);
 
         const float hpos = wide ?
             std::round((window_width / 2) - (scale.x / 2)) : 0;
