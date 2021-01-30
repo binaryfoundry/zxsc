@@ -232,21 +232,24 @@ namespace OpenGL
         const GLuint gl_format = GL_RGBA;
         const GLuint gl_internal_format = GL_RGBA;
 
+        fb.width = width;
+        fb.height = height;
+
         glGenFramebuffers(
             1,
-            &fb.frame_buffer);
+            &fb.frame);
 
         glBindFramebuffer(
             GL_FRAMEBUFFER,
-            fb.frame_buffer);
+            fb.frame);
 
         glGenTextures(
             1,
-            &fb.texture_buffer);
+            &fb.texture);
 
         glBindTexture(
             GL_TEXTURE_2D,
-            fb.texture_buffer);
+            fb.texture);
 
         glTexImage2D(
             GL_TEXTURE_2D,
@@ -285,7 +288,7 @@ namespace OpenGL
             GL_FRAMEBUFFER,
             GL_COLOR_ATTACHMENT0,
             GL_TEXTURE_2D,
-            fb.texture_buffer,
+            fb.texture,
             0);
 
         GLenum draw_buffers[1] = {

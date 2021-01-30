@@ -32,17 +32,20 @@ namespace OpenGL
     struct FrameBuffer
     {
     public:
-        GLuint frame_buffer = 0;
-        GLuint texture_buffer = 0;
+        uint32_t width = 0;
+        uint32_t height = 0;
+
+        GLuint frame = 0;
+        GLuint texture = 0;
         GLuint depth_renderbuffer = 0;
 
         void Delete()
         {
             glDeleteBuffers(
-                1, &frame_buffer);
+                1, &frame);
 
             glDeleteTextures(
-                1, &texture_buffer);
+                1, &texture);
 
             glDeleteRenderbuffers(
                 1, &depth_renderbuffer);

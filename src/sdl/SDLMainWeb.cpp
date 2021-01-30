@@ -2,6 +2,8 @@
 
 #if defined(EMSCRIPTEN)
 
+#include "../Main.hpp"
+
 #include "../gl/GL.hpp"
 
 #include "SDL.hpp"
@@ -22,6 +24,8 @@ static bool is_full_screen = false;
 static void sdl_run();
 static void sdl_update();
 static int sdl_init_graphics();
+
+Main m;
 
 int main(int argc, char *argv[])
 {
@@ -94,7 +98,7 @@ static int sdl_init_graphics()
     attr.enableExtensionsByDefault = 1;
     attr.premultipliedAlpha = 0;
     attr.explicitSwapControl = 0;
-    attr.majorVersion = 2;
+    attr.majorVersion = 3;
     attr.minorVersion = 0;
 
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx = emscripten_webgl_create_context(
