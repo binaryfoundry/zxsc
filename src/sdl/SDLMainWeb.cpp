@@ -2,8 +2,6 @@
 
 #if defined(EMSCRIPTEN)
 
-#include "../Main.hpp"
-
 #include "../gl/GL.hpp"
 
 #include "SDL.hpp"
@@ -24,8 +22,6 @@ static bool is_full_screen = false;
 static void sdl_run();
 static void sdl_update();
 static int sdl_init_graphics();
-
-Main m;
 
 int main(int argc, char *argv[])
 {

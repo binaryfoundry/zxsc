@@ -1,5 +1,7 @@
 #include "GL.hpp"
 
+#include <assert.h>
+
 namespace OpenGL
 {
     GLuint LoadShader(
@@ -218,5 +220,89 @@ namespace OpenGL
             NULL);
 
         return gl_texture_handle;
+    }
+
+    void GenFrameBufferRGBA8(
+        const uint32_t width,
+        const uint32_t height,
+        const bool mipmaps,
+        FrameBuffer& fb)
+    {
+        const GLuint gl_type = GL_UNSIGNED_BYTE;
+        const GLuint gl_format = GL_RGBA;
+        const GLuint gl_internal_format = GL_RGBA;
+
+        glGenFramebuffers(
+            1,
+            &fb.frame_buffer);
+
+        glBindFramebuffer(
+            GL_FRAMEBUFFER,
+            fb.frame_buffer);
+
+        glGenTextures(
+            1,
+            &fb.texture_buffer);
+
+        glBindTexture(
+            GL_TEXTURE_2D,
+            fb.texture_buffer);
+
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            mipmaps ? 0 : 1,
+            gl_internal_format,
+            width,
+            height,
+            0,
+            gl_format,
+            gl_type,
+            0);
+
+        glGenRenderbuffers(
+            1,
+            &fb.depth_renderbuffer);
+
+        glBindRenderbuffer(
+            GL_RENDERBUFFER,
+            fb.depth_renderbuffer);
+
+        glRenderbufferStorage(
+            GL_RENDERBUFFER,
+            GL_DEPTH_COMPONENT24,
+            width,
+            height);
+
+        GLCheckError();
+
+        glFramebufferRenderbuffer(
+            GL_FRAMEBUFFER,
+            GL_DEPTH_ATTACHMENT,
+            GL_RENDERBUFFER,
+            fb.depth_renderbuffer);
+
+        glFramebufferTexture2D(
+            GL_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            fb.texture_buffer,
+            0);
+
+        GLenum draw_buffers[1] = {
+            GL_COLOR_ATTACHMENT0
+        };
+
+        glDrawBuffers(
+            1,
+            draw_buffers);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            assert(false);
+        }
+
+        glBindFramebuffer(
+            GL_FRAMEBUFFER,
+            0);
     }
 }

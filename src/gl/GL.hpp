@@ -29,6 +29,26 @@ namespace OpenGL
         }
     }
 
+    struct FrameBuffer
+    {
+    public:
+        GLuint frame_buffer = 0;
+        GLuint texture_buffer = 0;
+        GLuint depth_renderbuffer = 0;
+
+        void Delete()
+        {
+            glDeleteBuffers(
+                1, &frame_buffer);
+
+            glDeleteTextures(
+                1, &texture_buffer);
+
+            glDeleteRenderbuffers(
+                1, &depth_renderbuffer);
+        }
+    };
+
     GLuint LinkShader(
         std::string vertex_shader_string,
         std::string fragment_shader_string);
@@ -43,4 +63,10 @@ namespace OpenGL
         const uint32_t width,
         const uint32_t height,
         uint8_t* data);
+
+    void GenFrameBufferRGBA8(
+        const uint32_t width,
+        const uint32_t height,
+        const bool mipmaps,
+        FrameBuffer& fb);
 }
