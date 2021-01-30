@@ -135,8 +135,8 @@ void GUI::Draw(
 {
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2(
-        window_width,
-        window_height);
+        static_cast<float>(window_width),
+        static_cast<float>(window_height));
 
     ImGui::Render();
 
