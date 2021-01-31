@@ -53,7 +53,7 @@ namespace Speccy
     };
 
     const float speccy_aspect = 1.25f;
-    const uint8_t super_sampling = 8;
+    const uint8_t super_sampling = 12;
 
     Render::Render()
     {
@@ -280,7 +280,7 @@ namespace Speccy
             view,
             frame_buffer.texture,
             false,
-            GL_LINEAR);
+            GL_LINEAR_MIPMAP_LINEAR);
     }
 
     void Render::DrawDisplay(
@@ -315,6 +315,9 @@ namespace Speccy
         glBindTexture(
             GL_TEXTURE_2D,
             texture);
+
+        glGenerateMipmap(
+            GL_TEXTURE_2D);
 
         glTexParameteri(
             GL_TEXTURE_2D,
