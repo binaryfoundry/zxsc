@@ -29,7 +29,12 @@ static int sdl_init_graphics();
 
 struct ControllerState
 {
-    bool b[15];
+    bool b[15] = {
+        false, false, false, false,
+        false, false, false, false,
+        false, false, false, false,
+        false, false, false
+    };
 };
 
 static std::map<int32_t, ControllerState> sdl_controllers;
@@ -75,7 +80,35 @@ static void sdl_update()
     sdl_window_width = static_cast<int>(cssW);
     sdl_window_height = static_cast<int>(cssH);
 
-    sdl_update_inputs();
+    if (emscripten_sample_gamepad_data() == EMSCRIPTEN_RESULT_SUCCESS)
+    {
+        int joy_count = emscripten_get_num_gamepads();
+
+        for (int i = 0; i < joy_count; i++)
+        {
+            EmscriptenGamepadEvent state;
+            emscripten_get_gamepad_status(i, &state);
+
+            if (!state.connected || state.numButtons < 16)
+                continue;
+
+            ControllerState& cs = sdl_controllers[state.index];
+
+            for (uint16_t i = 0; i < 16; i++)
+            {
+                if (!cs.b[i] && state.digitalButton[i])
+                {
+                    cs.b[i] = true;
+                    sdl_controller_button_down_callback(i);
+                }
+                else if (cs.b[i] && !state.digitalButton[i])
+                {
+                    cs.b[i] = false;
+                    sdl_controller_button_up_callback(i);
+                }
+            }
+        }
+    }
 
     sdl_imgui_update_input(sdl_window);
     sdl_imgui_update_cursor();
@@ -85,37 +118,6 @@ static void sdl_update()
 static void sdl_update_inputs()
 {
 
-    if (emscripten_sample_gamepad_data() != EMSCRIPTEN_RESULT_SUCCESS)
-    {
-        return;
-    }
-
-    EmscriptenGamepadEvent state;
-    int joy_count = emscripten_get_num_gamepads();
-
-    for (int i = 0; i < joy_count; i++)
-    {
-        emscripten_get_gamepad_status(i, &state);
-
-        if (!state.connected || state.numButtons < 16)
-            continue;
-
-        ControllerState& cs = sdl_controllers[state.index];
-
-        for (uint16_t i = 0; i < 16; i++)
-        {
-            if (!cs.b[i] && state.digitalButton[i])
-            {
-                cs.b[i] = true;
-                sdl_controller_button_down_callback(i);
-            }
-            else if (cs.b[i] && !state.digitalButton[i])
-            {
-                cs.b[i] = false;
-                sdl_controller_button_up_callback(i);
-            }
-        }
-    }
 }
 
 static int sdl_init_graphics()
