@@ -13,6 +13,7 @@ zx_t zx_sys;
 zx_desc_t zx_desc;
 
 uint16_t remap_stuntcar_keys(uint16_t key);
+uint16_t remap_stuntcar_buttons(uint16_t id);
 
 void Main::Init()
 {
@@ -34,6 +35,16 @@ void Main::Init()
     sdl_key_down_callback = [=](uint16_t key)
     {
         zx_key_down(&zx_sys, remap_stuntcar_keys(key));
+    };
+
+    sdl_controller_button_up_callback = [=](uint16_t id)
+    {
+        zx_key_up(&zx_sys, remap_stuntcar_buttons(id));
+    };
+
+    sdl_controller_button_down_callback = [=](uint16_t id)
+    {
+        zx_key_down(&zx_sys, remap_stuntcar_buttons(id));
     };
 
     zx_desc.pixel_buffer = &display_pixels[0];
@@ -114,4 +125,17 @@ uint16_t remap_stuntcar_keys(uint16_t key)
 #endif
     }
     return key;
+}
+
+uint16_t remap_stuntcar_buttons(uint16_t id)
+{
+    switch (id)
+    {
+    case 13: return 111; break;
+    case 12: return 120; break;
+    case 14: return 112; break;
+    case 11: return 115; break;
+    case 0: return 109; break;
+    }
+    return id;
 }

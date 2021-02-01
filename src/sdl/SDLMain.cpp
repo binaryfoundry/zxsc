@@ -13,17 +13,21 @@
 #include <iostream>
 #include <functional>
 #include <stdint.h>
+#include <map>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
 static SDL_GLContext gl;
+
 static EGLDisplay egl_display;
 static EGLContext egl_context;
 static EGLSurface egl_surface;
 
 static int sdl_init_graphics();
 static bool sdl_poll_events();
+
+static std::map<int32_t, SDL_GameController*> sdl_controllers;
 
 static int window_width = 320 * 4;
 static int window_height = 240 * 4;
@@ -39,12 +43,15 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0)
     {
         std::cout << SDL_GetError() << std::endl;
         SDL_Quit();
         return 1;
     }
+
+    //SDL_Joystick *j = SDL_GameControllerGetJoystick(controller);
+   // m_instance_id = SDL_JoystickInstanceID(j);
 
     sdl_imgui_initialise();
     sdl_init_graphics();
@@ -74,6 +81,7 @@ int main(int argc, char *argv[])
     sdl_imgui_destroy();
     SDL_GL_DeleteContext(gl);
     SDL_DestroyWindow(sdl_window);
+    //SDL_JoystickClose(joystick);
     SDL_Quit();
 
     return 0;
@@ -228,6 +236,8 @@ static bool sdl_poll_events()
     ImGuiIO& io = ImGui::GetIO();
 
     uint16_t key = 0;
+    SDL_GameController* controller;
+    SDL_GameControllerAxis axis;
 
     while (SDL_PollEvent(&event))
     {
@@ -314,13 +324,48 @@ static bool sdl_poll_events()
 
         case SDL_KEYUP:
             sdl_key_up_callback(static_cast<uint16_t>(event.key.keysym.sym));
-            int key = event.key.keysym.scancode;
+            key = event.key.keysym.scancode;
             IM_ASSERT(key >= 0 && key < IM_ARRAYSIZE(io.KeysDown));
             io.KeysDown[key] = (event.type == SDL_KEYDOWN);
             io.KeyShift = ((SDL_GetModState() & KMOD_SHIFT) != 0);
             io.KeyCtrl = ((SDL_GetModState() & KMOD_CTRL) != 0);
             io.KeyAlt = ((SDL_GetModState() & KMOD_ALT) != 0);
             io.KeySuper = false;
+            break;
+
+        case SDL_CONTROLLERAXISMOTION:
+            axis = (SDL_GameControllerAxis)event.caxis.axis;
+            switch (axis)
+            {
+                case SDL_CONTROLLER_AXIS_LEFTX:
+                    break;
+                case SDL_CONTROLLER_AXIS_LEFTY:
+                    break;
+            };
+            break;
+
+        case SDL_CONTROLLERBUTTONDOWN:
+            sdl_controller_button_down_callback(
+                static_cast<uint16_t>(event.cbutton.button));
+            break;
+
+        case SDL_CONTROLLERBUTTONUP:
+            sdl_controller_button_up_callback(
+                static_cast<uint16_t>(event.cbutton.button));
+            break;
+
+        case SDL_CONTROLLERDEVICEADDED:
+            controller = SDL_GameControllerOpen(event.cdevice.which);
+            sdl_controllers[event.cdevice.which] = controller;
+            break;
+
+        case SDL_CONTROLLERDEVICEREMOVED:
+            if (sdl_controllers.find(event.cdevice.which) != sdl_controllers.end())
+            {
+                auto controller = sdl_controllers[event.cdevice.which];
+                SDL_GameControllerClose(controller);
+                sdl_controllers[event.cdevice.which] = nullptr;
+            }
             break;
         }
     }
