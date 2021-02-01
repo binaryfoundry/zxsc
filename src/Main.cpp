@@ -54,8 +54,19 @@ void Main::Update()
 {
     ImGui::NewFrame();
 
-    ImGui::Begin("Options");
-    ImGui::Checkbox("Supersampling", &supersampling);
+    ImGui::Begin(
+        "Menu",
+        NULL,
+        ImGuiWindowFlags_AlwaysAutoResize);
+
+    ImGui::LabelText(
+        "Controls",
+        "Cursor keys, Ctrl.");
+
+    ImGui::Checkbox(
+        "Supersampling",
+        &supersampling);
+
     ImGui::End();
 
     if (update_count == 180)
