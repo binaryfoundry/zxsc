@@ -15,6 +15,8 @@ private:
     uint32_t update_count = 0;
 
     GUI gui;
+
+    bool supersampling = true;
     Speccy::Render speccy_render;
 
 public:

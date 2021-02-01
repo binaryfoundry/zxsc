@@ -53,7 +53,10 @@ void Main::Deinit()
 void Main::Update()
 {
     ImGui::NewFrame();
-    ImGui::ShowDemoWindow();
+
+    ImGui::Begin("Options");
+    ImGui::Checkbox("Supersampling", &supersampling);
+    ImGui::End();
 
     if (update_count == 180)
     {
@@ -71,7 +74,8 @@ void Main::Update()
     speccy_render.Draw(
         sdl_window_width,
         sdl_window_height,
-        zx_sys.border_color);
+        zx_sys.border_color,
+        supersampling);
 
     gui.Draw(
         sdl_window_width,

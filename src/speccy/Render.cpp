@@ -137,7 +137,8 @@ namespace Speccy
     void Render::Draw(
         const uint32_t window_width,
         const uint32_t window_height,
-        const uint32_t border_color)
+        const uint32_t border_color,
+        const bool supersampling)
     {
         glDisable(GL_CULL_FACE);
         glCullFace(GL_BACK);
@@ -171,46 +172,49 @@ namespace Speccy
 
         // Render Speccy display to FBO
 
-        glBindFramebuffer(
-            GL_FRAMEBUFFER,
-            frame_buffer.frame);
+        if (supersampling)
+        {
+            glBindFramebuffer(
+                GL_FRAMEBUFFER,
+                frame_buffer.frame);
 
-        glViewport(
-            0, 0,
-            frame_buffer.width,
-            frame_buffer.height);
+            glViewport(
+                0, 0,
+                frame_buffer.width,
+                frame_buffer.height);
 
-        glClearColor(0, 0, 0, 0);
+            glClearColor(0, 0, 0, 0);
 
-        glClear(
-            GL_COLOR_BUFFER_BIT |
-            GL_DEPTH_BUFFER_BIT |
-            GL_STENCIL_BUFFER_BIT);
+            glClear(
+                GL_COLOR_BUFFER_BIT |
+                GL_DEPTH_BUFFER_BIT |
+                GL_STENCIL_BUFFER_BIT);
 
-        const glm::mat4 proj_fb = glm::ortho<float>(
-            0,
-            static_cast<float>(frame_buffer.width),
-            static_cast<float>(frame_buffer.height),
-            0,
-            -1.0f,
-            1.0f);
+            const glm::mat4 proj_fb = glm::ortho<float>(
+                0,
+                static_cast<float>(frame_buffer.width),
+                static_cast<float>(frame_buffer.height),
+                0,
+                -1.0f,
+                1.0f);
 
-        glm::mat4 view_fb;
+            glm::mat4 view_fb;
 
-        view_fb = glm::scale(
-            view_fb,
-            glm::vec3(frame_buffer.width, frame_buffer.height, 1.0f));
+            view_fb = glm::scale(
+                view_fb,
+                glm::vec3(frame_buffer.width, frame_buffer.height, 1.0f));
 
-        DrawDisplay(
-            proj_fb,
-            view_fb,
-            display_texture,
-            true,
-            GL_NEAREST);
+            DrawDisplay(
+                proj_fb,
+                view_fb,
+                display_texture,
+                true,
+                GL_NEAREST);
 
-        glBindFramebuffer(
-            GL_FRAMEBUFFER,
-            0);
+            glBindFramebuffer(
+                GL_FRAMEBUFFER,
+                0);
+        }
 
         // Render to front buffer
 
@@ -275,12 +279,24 @@ namespace Speccy
             view,
             scale);
 
-        DrawDisplay(
-            proj,
-            view,
-            frame_buffer.texture,
-            false,
-            GL_LINEAR_MIPMAP_LINEAR);
+        if (supersampling)
+        {
+            DrawDisplay(
+                proj,
+                view,
+                frame_buffer.texture,
+                false,
+                GL_LINEAR_MIPMAP_LINEAR);
+        }
+        else
+        {
+            DrawDisplay(
+                proj,
+                view,
+                display_texture,
+                false,
+                GL_NEAREST);
+        }
     }
 
     void Render::DrawDisplay(
