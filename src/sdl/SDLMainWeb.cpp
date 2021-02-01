@@ -24,6 +24,7 @@ static bool is_full_screen = false;
 
 static void sdl_run();
 static void sdl_update();
+static void sdl_update_inputs();
 static int sdl_init_graphics();
 
 struct ControllerState
