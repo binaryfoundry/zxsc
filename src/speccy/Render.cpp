@@ -52,7 +52,7 @@ namespace Speccy
          0, 1, 2, 2, 3, 0
     };
 
-    const float speccy_aspect = 1.25f;
+    const float speccy_aspect = 1.33333f;
     const uint8_t super_sampling = 12;
 
     Render::Render()

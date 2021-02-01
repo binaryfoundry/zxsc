@@ -26,7 +26,7 @@ static int sdl_init_graphics();
 static bool sdl_poll_events();
 
 static int window_width = 320 * 4;
-static int window_height = 256 * 4;
+static int window_height = 240 * 4;
 
 static Main m;
 
