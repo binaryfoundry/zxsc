@@ -209,6 +209,7 @@ namespace Speccy
                 view_fb,
                 display_texture,
                 true,
+                GL_NEAREST,
                 GL_NEAREST);
 
             glBindFramebuffer(
@@ -286,7 +287,8 @@ namespace Speccy
                 view,
                 frame_buffer.texture,
                 false,
-                GL_LINEAR_MIPMAP_LINEAR);
+                GL_LINEAR_MIPMAP_LINEAR,
+                GL_NEAREST);
         }
         else
         {
@@ -295,6 +297,7 @@ namespace Speccy
                 view,
                 display_texture,
                 false,
+                GL_NEAREST,
                 GL_NEAREST);
         }
     }
@@ -304,7 +307,8 @@ namespace Speccy
         const glm::mat4 view,
         const GLuint texture,
         const bool flip,
-        const GLint filter)
+        const GLint min_filter,
+        const GLint mag_filter)
     {
         glUseProgram(
             gl_shader_program);
@@ -338,12 +342,12 @@ namespace Speccy
         glTexParameteri(
             GL_TEXTURE_2D,
             GL_TEXTURE_MIN_FILTER,
-            filter);
+            min_filter);
 
         glTexParameteri(
             GL_TEXTURE_2D,
             GL_TEXTURE_MAG_FILTER,
-            filter);
+            mag_filter);
 
         glTexParameteri(
             GL_TEXTURE_2D,

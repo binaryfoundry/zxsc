@@ -37,7 +37,8 @@ namespace Speccy
             const glm::mat4 view,
             const GLuint texture,
             const bool flip,
-            const GLint filter);
+            const GLint min_filter,
+            const GLint mag_filte);
 
     public:
         Render();
