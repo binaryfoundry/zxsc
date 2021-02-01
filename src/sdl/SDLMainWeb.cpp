@@ -13,6 +13,7 @@
 #include <iostream>
 #include <functional>
 #include <stdint.h>
+#include <map>
 
 #include <emscripten.h>
 #include <emscripten/html5.h>
@@ -25,11 +26,18 @@ static void sdl_run();
 static void sdl_update();
 static int sdl_init_graphics();
 
+struct ControllerState
+{
+    bool b[15];
+};
+
+static std::map<int32_t, ControllerState> sdl_controllers;
+
 Main m;
 
 int main(int argc, char *argv[])
 {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
     {
         std::cout << "SDL error: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -65,6 +73,35 @@ static void sdl_update()
     emscripten_get_element_css_size(0, &cssW, &cssH);
     sdl_window_width = static_cast<int>(cssW);
     sdl_window_height = static_cast<int>(cssH);
+
+    if (emscripten_sample_gamepad_data() == EMSCRIPTEN_RESULT_SUCCESS)
+    {
+        int joy_count = emscripten_get_num_gamepads();
+        for (int i = 0; i < joy_count; i++)
+        {
+            EmscriptenGamepadEvent state;
+            emscripten_get_gamepad_status(i, &state);
+
+            if (!state.connected || state.numButtons < 15)
+                continue;
+
+            ControllerState& cs = sdl_controllers[state.index];
+
+            for (uint16_t i = 0; i < 15; i++)
+            {
+                if (!cs.b[i] && state.digitalButton[i])
+                {
+                    cs.b[i] = true;
+                    sdl_controller_button_down_callback(i);
+                }
+                else if (cs.b[i] && !state.digitalButton[i])
+                {
+                    cs.b[i] = false;
+                    sdl_controller_button_up_callback(i);
+                }
+            }
+        }
+    }
 
     sdl_imgui_update_input(sdl_window);
     sdl_imgui_update_cursor();
@@ -299,6 +336,11 @@ static EM_BOOL em_gamepadconnected_callback(
     const EmscriptenGamepadEvent* gamepad_event,
     void* user_data)
 {
+    uint32_t id = (uint32_t)gamepad_event->index;
+    if (gamepad_event->connected)
+    {
+        sdl_controllers[id] = {};
+    }
     return SDL_TRUE;
 }
 
@@ -307,6 +349,11 @@ static EM_BOOL em_gamepaddisconnected_callbackk(
     const EmscriptenGamepadEvent* gamepad_event,
     void* user_data)
 {
+    uint32_t id = (uint32_t)gamepad_event->index;
+    if (sdl_controllers.find(id) != sdl_controllers.end())
+    {
+        sdl_controllers.erase(id);
+    }
     return SDL_TRUE;
 }
 
