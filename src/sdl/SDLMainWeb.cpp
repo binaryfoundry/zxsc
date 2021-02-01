@@ -294,6 +294,22 @@ static EM_BOOL em_wheel_callback(
     return SDL_TRUE;
 }
 
+static EM_BOOL em_gamepadconnected_callback(
+    int event_type,
+    const EmscriptenGamepadEvent* gamepad_event,
+    void* user_data)
+{
+    return SDL_TRUE;
+}
+
+static EM_BOOL em_gamepaddisconnected_callbackk(
+    int event_type,
+    const EmscriptenGamepadEvent* gamepad_event,
+    void* user_data)
+{
+    return SDL_TRUE;
+}
+
 static void sdl_run()
 {
     emscripten_set_pointerlockchange_callback(
@@ -314,8 +330,14 @@ static void sdl_run()
         NULL, NULL, true, em_handle_key_press);
     emscripten_set_wheel_callback(
         NULL, NULL, true, em_wheel_callback);
+    emscripten_set_gamepadconnected_callback(
+        NULL, true, em_gamepadconnected_callback);
+    emscripten_set_gamepaddisconnected_callback(
+        NULL, true, em_gamepaddisconnected_callbackk);
+
     emscripten_set_element_css_size(
         NULL, element_width, element_height);
+
     emscripten_set_main_loop(
         sdl_update, 0, true);
 }
