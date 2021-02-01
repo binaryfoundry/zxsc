@@ -82,12 +82,12 @@ static void sdl_update()
             EmscriptenGamepadEvent state;
             emscripten_get_gamepad_status(i, &state);
 
-            if (!state.connected || state.numButtons < 15)
+            if (!state.connected || state.numButtons < 16)
                 continue;
 
             ControllerState& cs = sdl_controllers[state.index];
 
-            for (uint16_t i = 0; i < 15; i++)
+            for (uint16_t i = 0; i < 16; i++)
             {
                 if (!cs.b[i] && state.digitalButton[i])
                 {

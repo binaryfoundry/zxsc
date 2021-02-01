@@ -131,11 +131,19 @@ uint16_t remap_stuntcar_buttons(uint16_t id)
 {
     switch (id)
     {
+#if !defined(EMSCRIPTEN)
     case 13: return 111; break;
     case 12: return 120; break;
     case 14: return 112; break;
     case 11: return 115; break;
     case 0: return 109; break;
+#else
+    case 14: return 111; break;
+    case 13: return 120; break;
+    case 15: return 112; break;
+    case 12: return 115; break;
+    case 0: return 109; break;
+#endif
     }
     return id;
 }
