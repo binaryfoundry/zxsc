@@ -50,9 +50,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    //SDL_Joystick *j = SDL_GameControllerGetJoystick(controller);
-   // m_instance_id = SDL_JoystickInstanceID(j);
-
     sdl_imgui_initialise();
     sdl_init_graphics();
 
@@ -81,7 +78,6 @@ int main(int argc, char *argv[])
     sdl_imgui_destroy();
     SDL_GL_DeleteContext(gl);
     SDL_DestroyWindow(sdl_window);
-    //SDL_JoystickClose(joystick);
     SDL_Quit();
 
     return 0;
